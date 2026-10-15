@@ -1,0 +1,496 @@
+%Este es documento para el libro del proyecto
+%Entrega: Prueba de Concepto
+%Compilador en Overleaf: Menu > Compiler > LaTeX (latex + dvips + ps2pdf)
+ \documentclass[11pt,openany,oneside,letterpaper]{book}
+ \usepackage[spanish]{babel}
+ %\usepackage[latin1]{inputenc}
+ \usepackage[utf8]{inputenc}
+
+%%Dimensiones de página
+ \usepackage[hmargin={3.0cm,2.5cm},vmargin={3.0cm,2.5cm}]{geometry}
+ \usepackage[spanish]{layout}
+ \marginparwidth=2.0cm
+ %\layout %Para mirar como esta configurada la página
+
+%Sangria y espacio entre párrafos
+ %\parindent=0pt
+ \parskip=10pt
+
+%Paquetes empleados
+ \usepackage{array,amsmath,amssymb,amsfonts,pifont,verbatim}
+ \usepackage{dsfont}
+
+%Paquetes para el formato del libro
+ \usepackage{fancyhdr}
+ \usepackage[]{fncychap}
+
+%Paquetes para las gráficas
+ \usepackage{pstricks,pst-all}
+
+%Paquete de manejo gráfico
+ \usepackage[dvips]{graphicx}
+ %Carpeta de imágenes (en Overleaf: crear la carpeta multimedia_latex y subir allí EscudoUD.eps)
+ \graphicspath{{multimedia_latex/}}
+
+%Paquete para insertar mejor los objetos flotantes
+ \usepackage{float}
+
+%Paquetes agregados para tablas, figuras vectoriales y enlaces
+ \usepackage{booktabs,tabularx,longtable,multirow}
+ \usepackage{url}
+ \usepackage{tikz}
+ \usetikzlibrary{babel,positioning,arrows.meta,shapes.geometric,fit,calc,patterns}
+ \usepackage{pgfplots}
+ \pgfplotsset{compat=1.16}
+
+%Sección con título corto solo en el encabezado de página (el índice conserva el título completo)
+ \newcommand{\seccioncorta}[2]{{\renewcommand{\sectionmark}[1]{}\section{#2}}\markright{\MakeUppercase{\thesection.\ #1}}}
+%Redefinition de títulos y rótulos
+ \renewcommand{\listtablename}{\'Indice de tablas}
+ \renewcommand{\tablename}{Tabla}
+ \addto\captionsspanish{\renewcommand{\listtablename}{\'Indice de tablas}\renewcommand{\tablename}{Tabla}}
+
+%Bibliografía en formato APA: sin etiquetas numéricas y con sangría francesa
+ \makeatletter
+ \renewenvironment{thebibliography}[1]
+  {\chapter*{\bibname}\addcontentsline{toc}{chapter}{\bibname}%
+   \def\@biblabel##1{}\list{}{\usecounter{enumiv}\setlength{\leftmargin}{1.27cm}\setlength{\itemindent}{-1.27cm}%
+   \setlength{\itemsep}{4pt}\setlength{\parsep}{0pt}}\sloppy}
+  {\endlist}
+ \makeatother
+
+\begin{document}
+%==================== Inicio de PRA0Portada.tex ====================
+%PÁGINA DE LA PORTADA
+\thispagestyle{empty}
+\begin{center}
+\includegraphics[scale=0.25]{EscudoUD.eps}\\
+\vspace*{1.5cm}
+
+{\large \bf Evaluación del impacto de la calidad de datos en la precisión de resultados analíticos: un enfoque centrado en duplicados exactos}\\
+\vspace*{1.2cm}
+
+{\Large \bf Prueba de Concepto}\\
+\vspace*{2.5cm}
+
+{\large Integrantes:}\\[0.3cm]
+David Martínez Rincón - 20222020167\\
+Juan David Pulido Rodríguez - 20202020063\\
+Santiago Alfonso Arias - 20222020093\\
+\vspace*{2cm}
+
+Docente: Helbert Eduardo Espitia Cuchango\\
+\vspace*{2.5cm}
+
+{\large METODOLOGÍA DE LA INVESTIGACIÓN\\
+UNIVERSIDAD DISTRITAL FRANCISCO JOSÉ DE CALDAS\\
+FACULTAD DE INGENIERÍA\\
+INGENIERÍA DE SISTEMAS\\
+BOGOTÁ D.C., COLOMBIA\\
+2026}
+\end{center}
+\newpage
+%==================== Fin de PRA0Portada.tex ====================
+
+%Numeración inicial
+ \frontmatter
+ \tableofcontents
+ %\listoffigures
+ %\listoftables
+
+%Numeración principal
+ \mainmatter
+
+%==================== Inicio de PRB5Desarrollo.tex ====================
+\chapter{Evaluación del efecto de los duplicados exactos sobre indicadores analíticos en una base de datos utilizando PostgreSQL y Python}
+\markboth{PRUEBA DE CONCEPTO}{PRUEBA DE CONCEPTO}
+
+\section{Idea principal}
+
+La prueba de concepto consiste en medir, con un experimento controlado, cuánto cambian los resultados de consultas analíticas sobre una base de datos cuando aparecen registros duplicados exactos. Para eso usaremos datos reales: el conjunto de datos de Delahoz-Dominguez et al. (2020), que reúne los resultados de las pruebas Saber~11 y Saber~Pro de 12\,411 estudiantes de ingeniería en Colombia y que es uno de los dos estudios que tomamos como ancla para la investigación. A partir de la versión original, que no tiene duplicados, generaremos varias versiones con porcentajes conocidos de duplicados, correremos exactamente las mismas consultas sobre todas y compararemos los resultados antes de la inyección, después de ella y después de eliminar los duplicados.
+
+La idea no es solo confirmar que los duplicados ``dañan'' los resultados, algo que casi todo el mundo da por hecho, sino ver qué indicadores se alteran, cuánto y en qué condiciones. La literatura muestra que el efecto de los duplicados sobre la exactitud de los clasificadores suele ser bajo (Li et al., 2021; Mohammed et al., 2025), pero no dice nada sobre conteos, promedios, medianas, dispersión, proporciones o rankings, que son los números que terminan en los informes. Escogimos Saber para esta prueba porque sus resultados publicados son justamente de ese tipo (promedios, desviaciones y porcentajes por programa) y porque se pueden calcular por completo en SQL. Así validamos la metodología de la investigación completa a pequeña escala y con herramientas que ya dominamos, antes de pasar a las pruebas estadísticas del ancla principal, Many Labs~1 (Klein et al., 2014).
+
+\section{Objetivos}
+
+\subsection{Objetivo general}
+
+Cuantificar el efecto de distintos niveles y esquemas de duplicación exacta sobre indicadores analíticos obtenidos con consultas SQL en PostgreSQL, usando los 12\,411 registros del conjunto de datos Saber~11/Saber~Pro publicado por Delahoz-Dominguez et al. (2020).
+
+\subsection{Objetivos específicos}
+
+\begin{enumerate}
+ \item Construir y verificar la línea base: cargar el conjunto de datos en PostgreSQL, confirmar que no tiene duplicados exactos y reproducir los valores descriptivos que reporta el artículo.
+ \item Generar de forma reproducible versiones del conjunto de datos con 1\,\%, 5\,\%, 10\,\% y 20\,\% de duplicados exactos, bajo un esquema uniforme y tres esquemas concentrados.
+ \item Calcular ocho indicadores analíticos idénticos en todas las versiones y medir su desviación respecto a la línea base.
+ \item Comprobar que la deduplicación en PostgreSQL devuelve cada versión exactamente a la línea base.
+\end{enumerate}
+
+\section{Hipótesis}
+
+\textbf{Hipótesis general.} La presencia de duplicados exactos distorsiona los resultados analíticos, y el tamaño de esa distorsión depende tanto de cuántos registros se duplican como de la forma en que los duplicados se distribuyen con respecto a la variable que se analiza.
+
+De ella se desprenden seis hipótesis específicas. Las redactamos después de la exploración preliminar que se describe más adelante, de modo que ya incorporan lo que vimos en los datos; la prueba debe confirmarlas o refutarlas con el procedimiento definitivo.
+
+\begin{enumerate}
+ \item[\textbf{H1.}] Los conteos crecen exactamente en el número de filas inyectadas, sin importar el esquema de inyección.
+ \item[\textbf{H2.}] Con duplicación uniforme, los promedios, las medianas, la dispersión, las proporciones y la correlación cambian muy poco (por debajo de 0,1 puntos en la media y de 0,2 puntos porcentuales en las proporciones, incluso con 20\,\% de duplicados).
+ \item[\textbf{H3.}] Cuando los duplicados se concentran en un grupo natural de los datos, como los estudiantes de estrato 1, los indicadores relacionados con ese grupo se sesgan de forma moderada pero sistemática: suben las proporciones del grupo y baja el promedio general.
+ \item[\textbf{H4.}] Cuando los duplicados se concentran según el valor de la variable que se analiza, la distorsión es grande y su forma depende de qué parte de la distribución se duplica: si es una cola, se mueven la media, la mediana y la dispersión; si son las dos colas, la media casi no cambia, pero la desviación estándar crece de manera notable.
+ \item[\textbf{H5.}] En las pruebas estadísticas, los duplicados uniformes inflan el estadístico chi-cuadrado aproximadamente en la misma proporción que el número de filas, mientras que la fuerza de la asociación (V de Cramér) se mantiene. Esta hipótesis se evalúa con Many Labs~1 en la investigación completa; en la prueba solo se adelanta una exploración.
+ \item[\textbf{H6.}] Después de eliminar los duplicados con \texttt{SELECT DISTINCT}, todos los indicadores vuelven exactamente a los valores de la línea base.
+\end{enumerate}
+
+\section{Datos de trabajo}
+
+El conjunto de datos fue publicado por Delahoz-Dominguez et al. (2020) en la revista \emph{Data in Brief} y está disponible en Mendeley Data (\url{https://data.mendeley.com/datasets/83tcx8psxv}) con licencia CC BY 4.0, sin registro ni solicitud previa. Viene en un archivo de Excel con 12\,411 filas y 45 columnas, una de ellas completamente vacía, que se descarta al cargar los datos. Cada fila es un estudiante y contiene sus resultados en Saber~11, sus resultados en Saber~Pro, su programa académico y varias variables socioeconómicas (estrato, tipo de colegio, educación de los padres, entre otras).
+
+Cada estudiante tiene un código único (\texttt{COD\_S11}), y al revisar el archivo comprobamos que no hay ninguna fila repetida, ni siquiera si se ignoran los códigos. Por eso, en esta prueba un \textbf{duplicado exacto} es simplemente una fila idéntica a otra en todas sus columnas, incluido el código del estudiante, y su significado es inequívoco: el mismo estudiante contado dos veces. No hace falta agregar un identificador propio, como sí habría sido necesario con otros conjuntos de datos.
+
+Se cargan las 44 columnas útiles, porque la deduplicación debe comparar filas completas, pero los indicadores usan solo las variables de la Tabla~\ref{tab:variables}.
+
+\begin{table}[H]
+\centering
+\caption{Variables del conjunto de datos que usan los indicadores}
+\label{tab:variables}
+\small
+\begin{tabularx}{\textwidth}{>{\ttfamily}l X l}
+\toprule
+\textrm{\textbf{Variable}} & \textbf{Descripción} & \textbf{Tipo} \\
+\midrule
+cod\_s11 & Código único del estudiante en Saber~11 & Texto \\
+gender & Sexo del estudiante (5\,043 mujeres y 7\,368 hombres) & Categórica \\
+stratum & Estrato socioeconómico de la vivienda (1 a 6) & Categórica \\
+school\_nat & Naturaleza del colegio: público (47,1\,\%) o privado & Categórica \\
+academic\_program & Programa de ingeniería que cursa el estudiante & Categórica \\
+mat\_s11 & Puntaje de matemáticas en Saber~11 (26 a 100) & Numérica \\
+qr\_pro & Puntaje de razonamiento cuantitativo en Saber~Pro & Numérica \\
+fep\_pro & Puntaje de formulación de proyectos de ingeniería en Saber~Pro & Numérica \\
+g\_sc & Puntaje global en Saber~Pro (37 a 247; media 162,71) & Numérica \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Diseño del experimento}
+
+El experimento cruza dos factores. El primero es el \textbf{nivel de duplicación}: 0\,\% (línea base), 1\,\%, 5\,\%, 10\,\% y 20\,\%, medido sobre el tamaño de la base. Por ejemplo, 10\,\% significa agregar 1\,241 filas duplicadas a las 12\,411 originales, para un total de 13\,652; con 1\,\%, 5\,\% y 20\,\% se agregan 124, 621 y 2\,482 filas. El segundo es el \textbf{esquema de inyección}, que define de dónde salen los registros que se duplican (Figura~\ref{fig:pipeline}):
+
+\begin{itemize}
+ \item \textbf{Uniforme:} los registros se eligen al azar entre todos los de la base, sin reemplazo, así que cada uno queda repetido como máximo una vez. Representa fallas generales de carga o de integración.
+ \item \textbf{Estrato 1 (grupo natural):} los registros se eligen solo entre los 1\,709 estudiantes de estrato 1. Representa una falla que afecta a una sola fuente o a un solo tipo de registro, como una integración que se ejecuta dos veces para una parte de los datos.
+ \item \textbf{Cola baja (según el resultado):} los registros se eligen solo entre los 1\,332 estudiantes con puntaje global igual o inferior al percentil 10 (G\_SC $\leq$ 133). Representa una duplicación que está ligada al propio valor que se mide.
+ \item \textbf{Dos colas (según el resultado):} los registros se eligen entre los estudiantes del decil más bajo y los del decil más alto (G\_SC $\leq$ 133 o G\_SC $\geq$ 192), 2\,644 en total.
+\end{itemize}
+
+Con 20\,\% de duplicados, los grupos de estrato 1 y de la cola baja tienen menos filas que las 2\,482 que hay que agregar. En esos dos casos se duplica el grupo completo y el resto se elige al azar dentro del mismo grupo, de modo que algunos registros quedan tres veces en la tabla.
+
+Cada combinación de nivel y esquema se repite con 10 semillas distintas para ver cuánto varían los resultados por puro azar. En total son 161 tablas: la línea base más 4 niveles $\times$ 4 esquemas $\times$ 10 repeticiones. Las tablas se nombran de forma sistemática, por ejemplo \texttt{saber\_u05\_s03} para la versión uniforme con 5\,\% de duplicados y semilla 3, o \texttt{saber\_b20\_s10} para la de cola baja con 20\,\% y semilla 10 (las letras \texttt{u}, \texttt{e}, \texttt{b} y \texttt{d} identifican los esquemas uniforme, estrato 1, cola baja y dos colas).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  st/.style={draw, rounded corners=3pt, align=center, text width=3.1cm, minimum height=1.3cm, font=\small, execute at begin node={\hyphenpenalty=10000\relax}},
+  tool/.style={font=\scriptsize\itshape, text=gray!60!black},
+  >={Stealth[length=2.5mm]}]
+\node[st] (x) at (0,0) {Archivo .xlsx\\ (Mendeley Data)};
+\node[st, right=0.9cm of x] (b) {Línea base\\ \texttt{saber\_base}\\ 12\,411 filas};
+\node[st, right=0.9cm of b] (v) {160 versiones con duplicados};
+\node[st, right=0.9cm of v] (q) {Consultas I1 a I8};
+\node[st, below=1.4cm of q] (d) {Versiones deduplicadas\\ (\texttt{SELECT DISTINCT})};
+\node[st, left=0.9cm of d] (r) {Tabla de resultados\\ nivel, esquema, semilla};
+\node[st, left=0.9cm of r] (m) {Métricas de comparación y gráficas};
+\node[st, left=0.9cm of m, text width=2.4cm] (c) {¿Vuelve a la línea base?};
+\draw[->] (x) -- (b); \draw[->] (b) -- (v); \draw[->] (v) -- (q);
+\draw[->] (q) -- (d); \draw[->] (q.south west) ++(0.2,0) -- (r.north east);
+\draw[->] (d) -- (r); \draw[->] (r) -- (m); \draw[->] (m) -- (c);
+\draw[->, dashed] (b.south) -- ++(0,-0.55) -| node[pos=0.25, below, font=\scriptsize] {valores de referencia} (c.north);
+\node[tool, above=0.05cm of x] {Python (pandas)};
+\node[tool, above=0.05cm of b] {PostgreSQL};
+\node[tool, above=0.05cm of v] {Python $+$ SQL};
+\node[tool, above=0.05cm of q] {PostgreSQL};
+\node[tool, below=0.05cm of m] {Python (SciPy, matplotlib)};
+\end{tikzpicture}
+\caption{Flujo de la prueba de concepto y herramienta que interviene en cada paso.}
+\label{fig:pipeline}
+\end{figure}
+
+\section{Indicadores y consultas}
+
+Sobre cada una de las 161 tablas, y luego sobre las 160 versiones deduplicadas, se ejecutan las mismas ocho consultas (Tabla~\ref{tab:indicadores}). Escogimos indicadores de naturaleza distinta a propósito, porque la hipótesis es que no todos reaccionan igual ante los duplicados. Los indicadores I2 e I6 corresponden a los valores que el artículo reporta en sus tablas 1 y 3, lo que nos permite comprobar que la línea base reproduce el estudio publicado.
+
+\begin{table}[H]
+\centering
+\caption{Indicadores analíticos evaluados}
+\label{tab:indicadores}
+\small
+\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X l}
+\toprule
+\textbf{N.º} & \textbf{Indicador} & \textbf{Cálculo} & \textbf{Tipo} \\
+\midrule
+I1 & Total de estudiantes & \texttt{COUNT(*)} & Conteo \\
+I2 & Media, desviación estándar, mínimo y máximo de G\_SC y MAT\_S11 & \texttt{AVG}, \texttt{STDDEV\_SAMP}, \texttt{MIN}, \texttt{MAX} & Descriptivo \\
+I3 & Mediana de G\_SC & \texttt{PERCENTILE\_CONT(0.5)} & Posición \\
+I4 & Porcentaje de estudiantes de colegio público & \texttt{AVG} sobre una condición & Proporción \\
+I5 & Porcentaje de estudiantes en el decil más bajo (G\_SC $\leq$ 133) & \texttt{AVG} sobre una condición & Proporción \\
+I6 & Por programa: número de estudiantes, \% de mujeres, \% de colegio público y promedios de G\_SC y FEP\_PRO & I1, I2 e I4 con \texttt{GROUP BY} & Por grupo \\
+I7 & Orden de los programas según su promedio de G\_SC & \texttt{RANK() OVER (ORDER BY ...)} & Ranking \\
+I8 & Correlación entre MAT\_S11 y QR\_PRO & \texttt{CORR(mat\_s11, qr\_pro)} & Asociación \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Para el ranking (I7) se usan los ocho programas que tienen al menos 70 estudiantes en la línea base. La lista se fija una sola vez sobre la base, porque si se recalculara en cada versión los duplicados podrían hacer que un programa pequeño entrara o saliera del ranking, y eso mezclaría dos efectos distintos.
+
+\section{Procedimiento}
+
+La prueba se desarrolla en cinco etapas:
+
+\begin{enumerate}
+ \item \textbf{Construir la línea base.} Descargar el archivo de Mendeley Data, leerlo con pandas, descartar la columna vacía, pasar los nombres de las columnas a minúsculas y cargarlo en PostgreSQL como la tabla \texttt{saber\_base}. Verificar que no tiene duplicados exactos, calcular los ocho indicadores de referencia y compararlos con los valores publicados.
+ \item \textbf{Inyectar duplicados.} Con un script de Python que orquesta sentencias SQL, generar las 160 versiones con duplicados. Después de crear cada tabla se comprueba que su número de filas sea exactamente el esperado (por ejemplo, 13\,652 para el 10\,\%).
+ \item \textbf{Ejecutar las consultas.} Correr las consultas I1 a I8 sobre todas las versiones, siempre en el mismo orden y con el mismo código, y guardar los resultados en una tabla de resultados junto con el nivel, el esquema y la semilla de cada versión.
+ \item \textbf{Deduplicar.} Crear una versión depurada de cada tabla con \texttt{SELECT DISTINCT}, volver a ejecutar las ocho consultas y comprobar que el número de duplicados restantes es cero.
+ \item \textbf{Comparar.} Calcular las métricas de la siguiente sección para cada indicador, promediar las 10 repeticiones de cada combinación, reportar su desviación estándar y graficar la desviación frente al nivel de duplicación para cada esquema.
+\end{enumerate}
+
+Las sentencias centrales son sencillas. Este es un ejemplo para la versión uniforme con 5\,\% de duplicados y semilla 3, con las variantes de los demás esquemas:
+
+\begin{small}
+\begin{verbatim}
+-- Inyeccion uniforme del 5 % (621 filas), semilla 3
+SELECT setseed(0.03);
+CREATE TABLE saber_u05_s03 AS
+  SELECT * FROM saber_base
+  UNION ALL
+  (SELECT * FROM saber_base ORDER BY random() LIMIT 621);
+
+-- Esquemas concentrados: solo cambia el WHERE de la seleccion
+--   estrato 1:  WHERE stratum = 'Stratum 1'
+--   cola baja:  WHERE g_sc <= 133
+--   dos colas:  WHERE g_sc <= 133 OR g_sc >= 192
+
+-- Grupo mas pequeno que lo requerido (cola baja al 20 %: 1 332 filas
+-- frente a 2 482): se duplica el grupo completo y se completa al azar
+CREATE TABLE saber_b20_s01 AS
+  SELECT * FROM saber_base
+  UNION ALL SELECT * FROM saber_base WHERE g_sc <= 133
+  UNION ALL
+  (SELECT * FROM saber_base WHERE g_sc <= 133
+   ORDER BY random() LIMIT 1150);
+
+-- Deduplicacion y verificacion
+CREATE TABLE saber_u05_s03_dedup AS
+  SELECT DISTINCT * FROM saber_u05_s03;
+SELECT COUNT(*) - COUNT(DISTINCT cod_s11) AS duplicados
+FROM saber_u05_s03;
+\end{verbatim}
+\end{small}
+
+\section{Métricas de comparación}
+
+Para cada indicador $I$ calculado en una versión con nivel de duplicación $k$ ($\hat{I}_k$) se compara contra su valor en la línea base ($I_0$) así:
+
+\begin{itemize}
+ \item \textbf{Error relativo porcentual:} $ER = |\hat{I}_k - I_0| / |I_0| \times 100$. Se usa para conteos, promedios, medianas y desviaciones (I1, I2, I3 e I6). Para la desviación estándar se reporta además el signo, porque indica si la dispersión aumenta o disminuye.
+ \item \textbf{Diferencia absoluta:} $\Delta = \hat{I}_k - I_0$, en puntos de puntaje para la media y la mediana, en puntos porcentuales para las proporciones (I4, I5 y los porcentajes de I6) y en unidades del coeficiente para la correlación (I8). Aquí también interesa el signo, porque indica hacia dónde se sesga el resultado.
+ \item \textbf{Coeficiente tau de Kendall:} compara el ranking de programas de cada versión con el de la base (I7). Un valor de 1 significa que el orden no cambió.
+\end{itemize}
+
+La prueba se considera exitosa si se cumplen tres condiciones: (1) cada versión con duplicados tiene exactamente el número de filas esperado; (2) después de deduplicar, todas las versiones vuelven a 12\,411 filas y todos los indicadores coinciden con la línea base ($ER = 0$), y (3) se observan diferencias medibles, al menos en los conteos en todos los esquemas y en los indicadores de posición, dispersión y proporción en los esquemas concentrados.
+
+\section{Resultado esperado y exploración preliminar}
+
+Antes de diseñar la prueba hicimos una exploración rápida en Python con pandas, durante la verificación de los dos conjuntos de datos que elegimos como anclas. Usamos los mismos niveles, los mismos esquemas y 10 semillas por combinación, aunque con selección al azar con reemplazo cuando el grupo era más pequeño que lo requerido. Sus resultados no reemplazan los de la prueba, que se repetirán con el procedimiento definitivo en PostgreSQL, pero sirven para saber qué esperar y para detectar a tiempo si algo no tiene sentido. Lo primero que confirmamos fue la línea base: la media de G\_SC es 162,71 con desviación estándar de 23,11, la mediana es 163, el 47,1\,\% de los estudiantes viene de colegio público y la correlación entre MAT\_S11 y QR\_PRO es 0,616.
+
+\begin{table}[!htbp]
+\centering
+\caption{Exploración preliminar con Saber~11/Saber~Pro: cambio de cada indicador frente a la línea base (promedio de 10 semillas)}
+\label{tab:prelim_saber}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{llrrrrrr}
+\toprule
+\textbf{Esquema} & \textbf{Nivel} & \textbf{$\Delta$ media} & \textbf{$\Delta$ mediana} & \textbf{$\Delta$ DE (\%)} & \textbf{$\Delta$ público} & \textbf{$\Delta$ decil bajo} & \textbf{$\tau$ ranking} \\
+ & & \textbf{(puntos)} & \textbf{(puntos)} & & \textbf{(pp)} & \textbf{(pp)} & \\
+\midrule
+ \multirow{4}{*}{Uniforme} & 1\,\% & $-0{,}005$ & $0{,}0$ & $-0{,}01$ & $0{,}00$ & $+0{,}01$ & $1{,}000$ \\
+  & 5\,\% & $+0{,}012$ & $0{,}0$ & $+0{,}03$ & $-0{,}06$ & $0{,}00$ & $0{,}993$ \\
+  & 10\,\% & $+0{,}011$ & $0{,}0$ & $+0{,}11$ & $-0{,}09$ & $+0{,}01$ & $0{,}979$ \\
+  & 20\,\% & $+0{,}016$ & $0{,}0$ & $+0{,}14$ & $-0{,}04$ & $+0{,}03$ & $0{,}979$ \\
+ \midrule
+ \multirow{4}{*}{Estrato 1} & 1\,\% & $-0{,}109$ & $0{,}0$ & $+0{,}10$ & $+0{,}39$ & $+0{,}09$ & $1{,}000$ \\
+  & 5\,\% & $-0{,}476$ & $-0{,}3$ & $+0{,}14$ & $+1{,}93$ & $+0{,}34$ & $1{,}000$ \\
+  & 10\,\% & $-0{,}956$ & $-1{,}0$ & $+0{,}41$ & $+3{,}66$ & $+0{,}71$ & $1{,}000$ \\
+  & 20\,\% & $-1{,}724$ & $-2{,}0$ & $+0{,}65$ & $+6{,}70$ & $+1{,}27$ & $0{,}986$ \\
+ \midrule
+ \multirow{4}{*}{Cola baja} & 1\,\% & $-0{,}395$ & $0{,}0$ & $+1{,}05$ & $+0{,}18$ & $+0{,}88$ & $1{,}000$ \\
+  & 5\,\% & $-1{,}903$ & $-1{,}0$ & $+4{,}72$ & $+0{,}84$ & $+4{,}25$ & $1{,}000$ \\
+  & 10\,\% & $-3{,}630$ & $-3{,}0$ & $+8{,}28$ & $+1{,}57$ & $+8{,}12$ & $1{,}000$ \\
+  & 20\,\% & $-6{,}646$ & $-6{,}0$ & $+13{,}04$ & $+2{,}96$ & $+14{,}88$ & $1{,}000$ \\
+ \midrule
+ \multirow{4}{*}{Dos colas} & 1\,\% & $-0{,}022$ & $0{,}0$ & $+1{,}00$ & $-0{,}05$ & $+0{,}40$ & $1{,}000$ \\
+  & 5\,\% & $-0{,}066$ & $0{,}0$ & $+4{,}73$ & $-0{,}12$ & $+1{,}90$ & $0{,}986$ \\
+  & 10\,\% & $-0{,}071$ & $0{,}0$ & $+8{,}88$ & $-0{,}29$ & $+3{,}57$ & $0{,}964$ \\
+  & 20\,\% & $-0{,}185$ & $0{,}0$ & $+15{,}72$ & $-0{,}44$ & $+6{,}62$ & $0{,}943$ \\
+ \bottomrule
+\end{tabular}
+\end{table}
+
+La Tabla~\ref{tab:prelim_saber} y la Figura~\ref{fig:saber} muestran cuatro comportamientos claramente distintos. Con duplicación uniforme casi nada cambia: aun con 20\,\% de duplicados la media se mueve 0,016 puntos, la mediana no se mueve y las proporciones cambian menos de 0,1 puntos porcentuales. El único efecto visible es que el ranking de programas a veces intercambia dos programas cuyos promedios están a menos de un punto (Mecánica y Electrónica), y por eso tau baja a 0,979. Cuando los duplicados se concentran en el estrato 1, la media baja 1,7 puntos y el porcentaje de estudiantes de colegio público sube 6,7 puntos porcentuales al 20\,\%, un sesgo moderado pero sistemático. Con la cola baja la distorsión es mucho mayor: la media cae 6,6 puntos, la mediana 6 puntos, la desviación estándar crece 13\,\% y el porcentaje de estudiantes en el decil más bajo pasa de 10,7\,\% a cerca de 25,6\,\%. El caso de las dos colas es el más engañoso: la media y la mediana prácticamente no cambian, pero la desviación estándar crece casi 16\,\% y el ranking es el que más se altera ($\tau = 0{,}943$). La correlación entre MAT\_S11 y QR\_PRO apenas se mueve en todos los casos (como máximo $+0{,}039$).
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.45\textwidth, height=6.2cm, xlabel={Nivel de duplicación (\%)}, xtick={0,1,5,10,20},
+ grid=major, grid style={gray!25}, tick label style={font=\footnotesize}, label style={font=\small},
+ /pgf/number format/use comma, legend style={font=\scriptsize, cells={anchor=west}, /tikz/every even column/.append style={column sep=6pt}}, name=a1, ylabel={Cambio en la media de G\_SC (puntos)}, legend style={at={(1.1,1.04)}, anchor=south}, legend columns=-1]
+\addplot[color=black, mark=*, thick] coordinates {(0,0) (1,-0.005) (5,0.012) (10,0.011) (20,0.016)};\addlegendentry{Uniforme}
+\addplot[color=blue!70!black, mark=square*, thick] coordinates {(0,0) (1,-0.109) (5,-0.476) (10,-0.956) (20,-1.724)};\addlegendentry{Estrato 1}
+\addplot[color=red!75!black, mark=triangle*, thick] coordinates {(0,0) (1,-0.395) (5,-1.903) (10,-3.63) (20,-6.646)};\addlegendentry{Cola baja}
+\addplot[color=green!45!black, mark=diamond*, thick] coordinates {(0,0) (1,-0.022) (5,-0.066) (10,-0.071) (20,-0.185)};\addlegendentry{Dos colas}
+\end{axis}
+\begin{axis}[width=0.45\textwidth, height=6.2cm, xlabel={Nivel de duplicación (\%)}, xtick={0,1,5,10,20},
+ grid=major, grid style={gray!25}, tick label style={font=\footnotesize}, label style={font=\small},
+ /pgf/number format/use comma, legend style={font=\scriptsize, cells={anchor=west}, /tikz/every even column/.append style={column sep=6pt}}, at={($(a1.east)+(2.4cm,0)$)}, anchor=west, ylabel={Cambio en la desviación estándar (\%)}, ymin=-1]
+\addplot[color=black, mark=*, thick] coordinates {(0,0) (1,-0.006) (5,0.034) (10,0.109) (20,0.135)};
+\addplot[color=blue!70!black, mark=square*, thick] coordinates {(0,0) (1,0.097) (5,0.143) (10,0.412) (20,0.654)};
+\addplot[color=red!75!black, mark=triangle*, thick] coordinates {(0,0) (1,1.049) (5,4.719) (10,8.281) (20,13.04)};
+\addplot[color=green!45!black, mark=diamond*, thick] coordinates {(0,0) (1,1.003) (5,4.732) (10,8.879) (20,15.716)};
+\end{axis}
+\end{tikzpicture}
+\caption{Exploración preliminar con Saber~11/Saber~Pro: cambio en la media (izquierda) y en la desviación estándar (derecha) del puntaje global G\_SC según el nivel y el esquema de duplicación. Promedio de 10 semillas.}
+\label{fig:saber}
+\end{figure}
+
+También hicimos una exploración similar con el ancla principal, Many Labs~1, sobre el efecto de encuadre de ganancia y pérdida, cuya prueba chi-cuadrado reproduce el valor publicado (516,4 con 6\,271 participantes y una V de Cramér de 0,287). En este caso los esquemas fueron uniforme, concentrado en el sitio de recolección más grande (1\,329 participantes) y concentrado en una sola celda de la tabla de contingencia (grupo de control que eligió la primera opción, 1\,038 participantes).
+
+\begin{table}[!htbp]
+\centering
+\caption{Exploración preliminar con Many Labs~1, efecto de encuadre de ganancia y pérdida (promedio de 10 semillas)}
+\label{tab:prelim_ml}
+\small
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Esquema} & \textbf{Nivel} & \textbf{Filas} & \textbf{$\chi^2/\chi^2_0$} & \textbf{V de Cramér} & \textbf{$\Delta$ opción 1 (pp)} \\
+\midrule
+ \multirow{4}{*}{Uniforme} & 1\,\% & 6\,407 & $1{,}006$ & $0{,}286$ & $0{,}00$ \\
+  & 5\,\% & 6\,661 & $1{,}051$ & $0{,}287$ & $-0{,}03$ \\
+  & 10\,\% & 6\,978 & $1{,}105$ & $0{,}288$ & $-0{,}01$ \\
+  & 20\,\% & 7\,613 & $1{,}197$ & $0{,}287$ & $+0{,}05$ \\
+ \midrule
+ \multirow{4}{*}{Sitio más grande} & 1\,\% & 6\,407 & $1{,}009$ & $0{,}287$ & $-0{,}04$ \\
+  & 5\,\% & 6\,661 & $1{,}047$ & $0{,}287$ & $-0{,}23$ \\
+  & 10\,\% & 6\,978 & $1{,}082$ & $0{,}285$ & $-0{,}45$ \\
+  & 20\,\% & 7\,613 & $1{,}174$ & $0{,}284$ & $-0{,}71$ \\
+ \midrule
+ \multirow{4}{*}{Celda grupo$\times$respuesta} & 1\,\% & 6\,407 & $0{,}918$ & $0{,}274$ & $+0{,}52$ \\
+  & 5\,\% & 6\,661 & $0{,}645$ & $0{,}225$ & $+2{,}50$ \\
+  & 10\,\% & 6\,978 & $0{,}402$ & $0{,}173$ & $+4{,}77$ \\
+  & 16,4\,\%$^{a}$ & 7\,382 & $0{,}202$ & $0{,}119$ & $+7{,}38$ \\
+ \bottomrule
+\end{tabular}
+
+\vspace{2pt}
+{\footnotesize $^{a}$ La celda solo tiene 1\,038 filas, así que no se puede llegar al 20\,\% sin repetir registros; el máximo posible sin reemplazo es 16,4\,\%. Línea base: 6\,344 filas, $\chi^2_0 = 516{,}4$, V de Cramér $= 0{,}287$.}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.45\textwidth, height=6.2cm, xlabel={Nivel de duplicación (\%)}, xtick={0,1,5,10,20},
+ grid=major, grid style={gray!25}, tick label style={font=\footnotesize}, label style={font=\small},
+ /pgf/number format/use comma, legend style={font=\scriptsize, cells={anchor=west}, /tikz/every even column/.append style={column sep=6pt}}, name=a1, ylabel={$\chi^2/\chi^2_0$}, legend style={at={(1.1,1.04)}, anchor=south}, legend columns=-1, ymin=0, ymax=1.3]
+\addplot[gray, dashed, domain=0:20, samples=2, forget plot] {1+x/100};
+\addplot[color=black, mark=*, thick] coordinates {(0,1) (1,1.006) (5,1.051) (10,1.105) (20,1.197)};\addlegendentry{Uniforme}
+\addplot[color=blue!70!black, mark=square*, thick] coordinates {(0,1) (1,1.009) (5,1.047) (10,1.082) (20,1.174)};\addlegendentry{Sitio más grande}
+\addplot[color=red!75!black, mark=triangle*, thick] coordinates {(0,1) (1,0.918) (5,0.645) (10,0.402) (16.4,0.202)};\addlegendentry{Celda grupo$\times$respuesta}
+\end{axis}
+\begin{axis}[width=0.45\textwidth, height=6.2cm, xlabel={Nivel de duplicación (\%)}, xtick={0,1,5,10,20},
+ grid=major, grid style={gray!25}, tick label style={font=\footnotesize}, label style={font=\small},
+ /pgf/number format/use comma, legend style={font=\scriptsize, cells={anchor=west}, /tikz/every even column/.append style={column sep=6pt}}, at={($(a1.east)+(2.4cm,0)$)}, anchor=west, ylabel={V de Cramér}, ymin=0, ymax=0.32, yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2}]
+\addplot[color=black, mark=*, thick] coordinates {(0,0.287) (1,0.2864) (5,0.2871) (10,0.2876) (20,0.2866)};
+\addplot[color=blue!70!black, mark=square*, thick] coordinates {(0,0.287) (1,0.2868) (5,0.2866) (10,0.2846) (20,0.2839)};
+\addplot[color=red!75!black, mark=triangle*, thick] coordinates {(0,0.287) (1,0.2736) (5,0.2249) (10,0.1735) (16.4,0.1195)};
+\end{axis}
+\end{tikzpicture}
+\caption{Exploración preliminar con Many Labs 1, efecto de encuadre de ganancia y pérdida: razón del chi-cuadrado frente a la línea base (izquierda; la línea punteada es $1+k$) y V de Cramér (derecha). En el esquema de celda el último punto corresponde al 16,4\,\%, porque la celda solo tiene 1\,038 filas para duplicar. Promedio de 10 semillas.}
+\label{fig:ml}
+\end{figure}
+
+La exploración con Many Labs anticipa lo que plantea H5: con duplicación uniforme el chi-cuadrado crece casi exactamente en la misma proporción que el número de filas ($1{,}197$ con 20\,\%), mientras que la V de Cramér y la proporción de respuestas no cambian. Es decir, la prueba parece más contundente sin que el efecto sea más fuerte. Lo inesperado apareció en el esquema de celda: al duplicar solo una combinación de grupo y respuesta, el chi-cuadrado no sube sino que cae hasta una quinta parte del original y la V de Cramér baja de 0,287 a 0,120. El efecto sigue siendo significativo, porque la línea base tiene un valor $p$ prácticamente nulo, pero parece menos de la mitad de grande de lo que es. Los duplicados, entonces, no solo pueden exagerar un resultado; según dónde caigan, también pueden atenuarlo.
+
+En resumen, esperamos que la prueba muestre que los duplicados siempre inflan los conteos, que cuando se reparten de forma uniforme casi no mueven los demás indicadores, y que cuando se concentran, sobre todo en función del valor que se mide, distorsionan de manera importante indicadores que alguien podría usar para tomar decisiones. Si la deduplicación devuelve todo a la línea base, la prueba confirma además que el procedimiento de medición es confiable y que se puede escalar a la investigación completa.
+
+\section{Herramientas}
+
+\begin{table}[H]
+\centering
+\caption{Herramientas de la prueba de concepto}
+\label{tab:herramientas}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{5cm} X}
+\toprule
+\textbf{Herramienta} & \textbf{Uso en la prueba} \\
+\midrule
+PostgreSQL 16 & Almacenamiento de las 161 tablas, inyección de duplicados, consultas I1 a I8 y deduplicación \\
+Python 3.12 (pandas, openpyxl, psycopg 3, SQLAlchemy) & Lectura del archivo de Excel, carga a la base, orquestación del experimento y consolidación de resultados \\
+SciPy & Tau de Kendall y, en la exploración de Many Labs, chi-cuadrado y V de Cramér \\
+matplotlib & Gráficas de desviación frente al nivel de duplicación \\
+JupyterLab & Cuadernos de análisis reproducibles \\
+Git y GitHub (repositorio privado) & Control de versiones de los scripts, las semillas y los resultados \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Cronograma}
+
+\begin{table}[H]
+\centering
+\caption{Cronograma de la prueba de concepto}
+\label{tab:crono_pdc}
+\small
+\begin{tabularx}{\textwidth}{c >{\raggedright\arraybackslash}p{2.6cm} X >{\raggedright\arraybackslash}p{3.6cm}}
+\toprule
+\textbf{Semana} & \textbf{Fechas} & \textbf{Actividades} & \textbf{Responsable} \\
+\midrule
+12 & 19 al 23 de octubre de 2026 & Descarga del archivo, carga en PostgreSQL, verificación de duplicados y cálculo de la línea base & David Martínez Rincón \\
+12 & 19 al 23 de octubre de 2026 & Scripts de inyección, generación de las 160 versiones y verificación de conteos & Juan David Pulido Rodríguez \\
+13 & 26 al 30 de octubre de 2026 & Ejecución de las consultas en todas las versiones, deduplicación y verificación & David Martínez Rincón y Juan David Pulido Rodríguez \\
+13 & 26 al 30 de octubre de 2026 & Cálculo de métricas, gráficas, análisis de resultados y redacción del informe & Santiago Alfonso Arias, con revisión de todo el grupo \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Alcance y limitaciones}
+
+\begin{itemize}
+ \item La prueba trabaja con uno solo de los dos estudios ancla. Saber permite evaluar indicadores descriptivos en SQL, pero no tiene pruebas estadísticas publicadas; las pruebas chi-cuadrado y $t$ de Many Labs~1 se replicarán en la investigación completa.
+ \item Solo se consideran duplicados exactos. Los duplicados aproximados quedan fuera por decisión de alcance.
+ \item Los duplicados se introducen de forma sintética. Eso permite controlar su cantidad y distribución, pero no reproduce necesariamente los patrones de duplicación que aparecen en sistemas reales.
+ \item Con 20\,\% de duplicados, dos de los esquemas concentrados obligan a repetir algunos registros más de una vez, porque el grupo es más pequeño que el número de filas que hay que agregar. Esos casos se reportarán por separado.
+ \item Los resultados de la exploración preliminar se obtuvieron con pandas y una regla de selección ligeramente distinta en los grupos pequeños; los valores definitivos son los que produzca el procedimiento en PostgreSQL.
+ \item Los resultados describen el comportamiento de este conjunto de datos y de estos indicadores; no deben generalizarse a cualquier base de datos sin nuevas pruebas.
+\end{itemize}
+
+\section{Relación con la investigación completa}
+
+Esta prueba valida, a pequeña escala, el mismo ciclo que usará la investigación: línea base limpia, inyección controlada, análisis idéntico, deduplicación y comparación. Si funciona, el siguiente paso es aplicarlo al ancla principal, Many Labs~1 (Klein et al., 2014): replicar sus pruebas chi-cuadrado y $t$ sobre los datos originales y medir cómo cambian el estadístico, el valor $p$ y los tamaños de efecto (V de Cramér y $d$ de Cohen) cuando hay duplicados uniformes, concentrados en un sitio de recolección o concentrados en una combinación de grupo y respuesta. Con eso la investigación cubrirá los dos tipos de resultados que más se usan para decidir: los descriptivos, con Saber, y los inferenciales, con Many Labs.
+%==================== Fin de PRB5Desarrollo.tex ====================
+
+%Numeración final
+ \backmatter
+
+\begin{thebibliography}{xx}
+%==================== Inicio de Bibliografia.tex ====================
+%Bibliografía en formato APA 7
+
+\bibitem{delahoz2020} Delahoz-Dominguez, E., Zuluaga, R., y Fontalvo-Herrera, T. (2020). Dataset of academic performance evolution for engineering students. \emph{Data in Brief, 30}, 105537. \url{https://doi.org/10.1016/j.dib.2020.105537}
+
+\bibitem{klein2014} Klein, R. A., Ratliff, K. A., Vianello, M., Adams, R. B., Jr., Bahník, Š., Bernstein, M. J., Bocian, K., Brandt, M. J., Brooks, B., Brumbaugh, C. C., Cemalcilar, Z., Chandler, J., Cheong, W., Davis, W. E., Devos, T., Eisner, M., Frankowska, N., Furrow, D., Galliani, E. M., \ldots{} Nosek, B. A. (2014). Investigating variation in replicability: A ``many labs'' replication project. \emph{Social Psychology, 45}(3), 142--152. \url{https://doi.org/10.1027/1864-9335/a000178}
+
+\bibitem{li2021} Li, P., Rao, X., Blase, J., Zhang, Y., Chu, X., y Zhang, C. (2021). CleanML: A study for evaluating the impact of data cleaning on ML classification tasks. En \emph{2021 IEEE 37th International Conference on Data Engineering (ICDE)} (pp. 13--24). IEEE.
+
+\bibitem{mohammed2025} Mohammed, S., Budach, L., Feuerpfeil, M., Ihde, N., Nathansen, A., Noack, N. S., Patzlaff, H., Naumann, F., y Harmouch, H. (2025). The effects of data quality on machine learning performance on tabular data. \emph{Information Systems, 132}, 102549. \url{https://doi.org/10.1016/j.is.2025.102549}
+%==================== Fin de Bibliografia.tex ====================
+\end{thebibliography}
+\end{document}

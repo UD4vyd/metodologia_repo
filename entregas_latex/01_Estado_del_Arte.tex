@@ -1,0 +1,291 @@
+%Este es documento para el libro del proyecto
+%Entrega: Estado del Arte
+%Compilador en Overleaf: Menu > Compiler > LaTeX (latex + dvips + ps2pdf)
+ \documentclass[11pt,openany,oneside,letterpaper]{book}
+ \usepackage[spanish]{babel}
+ %\usepackage[latin1]{inputenc}
+ \usepackage[utf8]{inputenc}
+
+%%Dimensiones de página
+ \usepackage[hmargin={3.0cm,2.5cm},vmargin={3.0cm,2.5cm}]{geometry}
+ \usepackage[spanish]{layout}
+ \marginparwidth=2.0cm
+ %\layout %Para mirar como esta configurada la página
+
+%Sangria y espacio entre párrafos
+ %\parindent=0pt
+ \parskip=10pt
+
+%Paquetes empleados
+ \usepackage{array,amsmath,amssymb,amsfonts,pifont,verbatim}
+ \usepackage{dsfont}
+
+%Paquetes para el formato del libro
+ \usepackage{fancyhdr}
+ \usepackage[]{fncychap}
+
+%Paquetes para las gráficas
+ \usepackage{pstricks,pst-all}
+
+%Paquete de manejo gráfico
+ \usepackage[dvips]{graphicx}
+ %Carpeta de imágenes (en Overleaf: crear la carpeta multimedia_latex y subir allí EscudoUD.eps)
+ \graphicspath{{multimedia_latex/}}
+
+%Paquete para insertar mejor los objetos flotantes
+ \usepackage{float}
+
+%Paquetes agregados para tablas, figuras vectoriales y enlaces
+ \usepackage{booktabs,tabularx,longtable,multirow}
+ \usepackage{url}
+ \usepackage{tikz}
+ \usetikzlibrary{babel,positioning,arrows.meta,shapes.geometric,fit,calc,patterns}
+ \usepackage{pgfplots}
+ \pgfplotsset{compat=1.16}
+
+%Sección con título corto solo en el encabezado de página (el índice conserva el título completo)
+ \newcommand{\seccioncorta}[2]{{\renewcommand{\sectionmark}[1]{}\section{#2}}\markright{\MakeUppercase{\thesection.\ #1}}}
+%Redefinition de títulos y rótulos
+ \renewcommand{\listtablename}{\'Indice de tablas}
+ \renewcommand{\tablename}{Tabla}
+ \addto\captionsspanish{\renewcommand{\listtablename}{\'Indice de tablas}\renewcommand{\tablename}{Tabla}}
+
+%Bibliografía en formato APA: sin etiquetas numéricas y con sangría francesa
+ \makeatletter
+ \renewenvironment{thebibliography}[1]
+  {\chapter*{\bibname}\addcontentsline{toc}{chapter}{\bibname}%
+   \def\@biblabel##1{}\list{}{\usecounter{enumiv}\setlength{\leftmargin}{1.27cm}\setlength{\itemindent}{-1.27cm}%
+   \setlength{\itemsep}{4pt}\setlength{\parsep}{0pt}}\sloppy}
+  {\endlist}
+ \makeatother
+
+\begin{document}
+%==================== Inicio de PRA0Portada.tex ====================
+%PÁGINA DE LA PORTADA
+\thispagestyle{empty}
+\begin{center}
+\includegraphics[scale=0.25]{EscudoUD.eps}\\
+\vspace*{1.5cm}
+
+{\large \bf Evaluación del impacto de la calidad de datos en la precisión de resultados analíticos: un enfoque centrado en duplicados exactos}\\
+\vspace*{1.2cm}
+
+{\Large \bf Estado del Arte}\\
+\vspace*{2.5cm}
+
+{\large Integrantes:}\\[0.3cm]
+David Martínez Rincón - 20222020167\\
+Juan David Pulido Rodríguez - 20202020063\\
+Santiago Alfonso Arias - 20222020093\\
+\vspace*{2cm}
+
+Docente: Helbert Eduardo Espitia Cuchango\\
+\vspace*{2.5cm}
+
+{\large METODOLOGÍA DE LA INVESTIGACIÓN\\
+UNIVERSIDAD DISTRITAL FRANCISCO JOSÉ DE CALDAS\\
+FACULTAD DE INGENIERÍA\\
+INGENIERÍA DE SISTEMAS\\
+BOGOTÁ D.C., COLOMBIA\\
+2026}
+\end{center}
+\newpage
+%==================== Fin de PRA0Portada.tex ====================
+
+%Numeración inicial
+ \frontmatter
+ \tableofcontents
+ %\listoffigures
+ %\listoftables
+
+%Numeración principal
+ \mainmatter
+
+%==================== Inicio de PRB3EstadoArte.tex ====================
+\chapter{Estado del arte}
+
+\section{Introducción}
+
+Hoy casi cualquier decisión importante, sea en salud pública, en una empresa o en una entidad del Estado, pasa por algún tipo de análisis de datos. El problema es que el volumen de información creció mucho más rápido que los mecanismos para asegurar su calidad. Un modelo de aprendizaje automático, un indicador estadístico o un tablero de control pueden estar construidos de forma impecable y aun así llegar a conclusiones equivocadas si los datos que los alimentan tienen errores. En ingeniería de datos esto se resume con la expresión \emph{garbage in, garbage out}: la validez de lo que sale depende de lo que entra. Esa idea es el punto de partida de esta investigación.
+
+Dentro de los muchos problemas de calidad que existen (valores faltantes, inconsistencias, errores de digitación, información desactualizada, formatos heterogéneos), nosotros nos concentramos en uno muy concreto: los duplicados exactos, es decir, registros que se repiten de manera idéntica en todas sus columnas dentro de un mismo conjunto de datos. Es un problema fácil de definir y fácil de detectar. Justamente por eso suele darse por resuelto sin que nadie se pregunte cuánto habría cambiado el resultado si esa limpieza no se hubiera hecho. Dejamos por fuera a propósito los duplicados aproximados o difusos (los que requieren medidas de similitud y umbrales de coincidencia), porque ese camino lleva a comparar algoritmos de detección, un campo que ya está bastante trabajado y que no es lo que nos interesa.
+
+Este estado del arte reúne los veinte antecedentes de la revisión documental del grupo, publicados en revistas colombianas y latinoamericanas indexadas, y los complementa con cuatro referentes internacionales que resultan indispensables para ubicar el problema. Los organizamos en cuatro ejes, que se resumen en la Figura~\ref{fig:ejes}: (a) la calidad de datos como objeto de estudio y de medición; (b) el efecto de la limpieza y el preprocesamiento sobre los resultados de un análisis; (c) la comparación del desempeño analítico bajo distintas condiciones de los datos de entrada, y (d) lo que se sabe específicamente sobre los duplicados. Al final presentamos una síntesis y el vacío que esta investigación busca cubrir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  eje/.style={draw, rounded corners=3pt, align=left, text width=6.6cm, inner sep=5pt, font=\small, execute at begin node={\hyphenpenalty=10000\relax}},
+  >={Stealth[length=2.5mm]}]
+\node[draw, rounded corners=4pt, thick, align=center, text width=4.6cm, inner sep=6pt, execute at begin node={\hyphenpenalty=10000\relax}, fill=gray!10] (c) at (0,0)
+  {\textbf{Duplicados exactos y precisión de resultados analíticos}};
+\node[eje, anchor=south] (a) at (-3.85,1.4) {
+  {\bfseries (a) La calidad de datos como objeto de estudio}\\[2pt]
+  Wang y Strong (1996)$^{*}$\\ Martínez et al. (2022)\\ Fuentes-Moya et al. (2014)\\
+  Piedrahita Mazo y Montoya Quintero (2022)\\ Corrales et al. (2016)};
+\node[eje, anchor=south] (b) at (3.85,1.4) {
+  {\bfseries (b) Efecto de la limpieza y el preprocesamiento}\\[2pt]
+  Romero Duque et al. (2023)\\ Gómez et al. (2025)\\ Amézquita Tovar y Eslava Blanco (2022)\\
+  Gil González et al. (2014)\\ Contreras Contreras et al. (2022)\\ Yepes-Delgado et al. (2023)};
+\node[eje, anchor=north] (cc) at (-3.85,-1.4) {
+  {\bfseries (c) Comparación del desempeño analítico}\\[2pt]
+  Pérez-Gutiérrez (2020)\\ Contreras Bravo et al. (2022)\\ Quevedo Piratova et al. (2024)\\
+  Hernández-Ponce et al. (2024)\\ Ramírez-Noriega et al. (2026)};
+\node[eje, anchor=north] (d) at (3.85,-1.4) {
+  {\bfseries (d) Los duplicados como problema de calidad}\\[2pt]
+  Candal Vicente (2013)\\ Ramos Frometa y Gómez Luna (2024)\\ Da Silva Pereira Rodrigues (2023)\\
+  Hernández-Leal et al. (2017)\\ Rodríguez Rodríguez (2013)\\
+  Elmagarmid et al. (2007)$^{*}$\\ Li et al. (2021)$^{*}$\\ Mohammed et al. (2025)$^{*}$};
+\draw[->] ([xshift=-1.6cm]c.north) -- ([xshift=-1.6cm]c.north |- a.south);
+\draw[->] ([xshift=1.6cm]c.north) -- ([xshift=1.6cm]c.north |- b.south);
+\draw[->] ([xshift=-1.6cm]c.south) -- ([xshift=-1.6cm]c.south |- cc.north);
+\draw[->] ([xshift=1.6cm]c.south) -- ([xshift=1.6cm]c.south |- d.north);
+\end{tikzpicture}
+\caption{Organización de los antecedentes en los cuatro ejes de la revisión. Los marcados con $^{*}$ son los referentes internacionales; Corrales et al. (2016) aporta a los ejes (a) y (d).}
+\label{fig:ejes}
+\end{figure}
+
+\section{La calidad de datos como objeto de estudio}
+
+En términos generales, la calidad de datos se entiende como el grado en que un conjunto de datos sirve para el propósito con el que se va a usar. Detrás de esa definición sencilla hay varias dimensiones (completitud, exactitud, consistencia, actualidad, unicidad) y cada una exige sus propios criterios de medición. El trabajo clásico de Wang y Strong (1996) fue decisivo en este punto: a partir de encuestas a usuarios propusieron un marco jerárquico de dimensiones de calidad y mostraron que, para quien consume los datos, la calidad va mucho más allá de la exactitud. Varios de los antecedentes revisados siguen esa línea y tratan la calidad como algo que se puede medir, no como una intuición.
+
+Martínez et al. (2022) evaluaron la calidad de distintos conjuntos de datos abiertos sobre COVID-19 publicados por gobiernos de América Latina, usando dimensiones e indicadores definidos de antemano para comparar las fuentes entre sí. Lo que más nos sirve de su trabajo no es el tema de los datos abiertos, sino la demostración de que la calidad de un conjunto de datos se puede evaluar de forma cuantitativa y repetible. Sin esa condición no tendría sentido comparar una versión limpia de un conjunto de datos con una versión deliberadamente degradada, que es lo que planteamos hacer.
+
+Fuentes-Moya et al. (2014) estudiaron cómo influye la calidad de los datos en la preferencia de los ciudadanos por las aplicaciones de gobierno electrónico municipal. El contexto es distinto al nuestro, pero el hallazgo es valioso: la calidad de la información tiene efectos observables sobre la confianza de quienes usan los resultados, así que no es un asunto puramente técnico. Piedrahita Mazo y Montoya Quintero (2022), por su parte, revisaron la literatura sobre evaluación de la calidad de la información en las organizaciones y concluyen que gestionarla bien depende de medirla con indicadores específicos para cada proceso. Para nosotros eso se traduce en una exigencia práctica: antes de medir el efecto de los duplicados hay que tener muy bien definidas las métricas con las que se va a medir.
+
+El antecedente más cercano a nuestro objeto de estudio es el de Corrales et al. (2016). En una revisión sistemática sobre los problemas de calidad que afectan las tareas de descubrimiento de conocimiento, los autores clasifican varias dimensiones (heterogeneidad, ruido, inconsistencia, datos faltantes y redundancia) y definen la redundancia precisamente como la presencia de instancias duplicadas y de atributos derivados que repiten la misma información. Además ilustran estos problemas con un conjunto de datos agrícola sobre la roya del café. Es el único trabajo de la revisión que trata la duplicación como una dimensión de calidad con consecuencias sobre el análisis, y por eso es un punto de partida obligado. Eso sí, su aporte es de clasificación y descripción: no llega a medir experimentalmente cuánto cambia un resultado cuando hay duplicados.
+
+\section{Qué pasa con los resultados cuando se limpian los datos}
+
+Un segundo grupo de antecedentes documenta cómo una intervención concreta de limpieza o preprocesamiento cambia de forma medible los resultados de un análisis. Ninguno de estos trabajos se ocupa de los duplicados, pero todos siguen la misma lógica que queremos aplicar: tomar un mismo conjunto de datos, modificar una sola condición de calidad y comparar lo que se obtiene antes y después.
+
+Romero Duque et al. (2023) propusieron una ruta para construir bases de datos robustas frente a datos faltantes y la aplicaron a 1\,253\,280 registros financieros de 2\,238 empresas de la localidad de Chapinero, en Bogotá, entre 2012 y 2018. Compararon tres técnicas de imputación y concluyeron que la imputación simple era la más adecuada por la naturaleza longitudinal de los datos. El problema que estudian es distinto al nuestro, pero la manera en que contrastan diferentes estados de una misma base de datos es exactamente la lógica comparativa que queremos trasladar a los duplicados exactos.
+
+En la misma dirección, Gómez et al. (2025) evaluaron el algoritmo \emph{Known Sub-Sequence Algorithm} (KSSA) como herramienta para escoger el mejor método de imputación en series de tiempo de pesca de atún en el océano Pacífico. Simularon datos faltantes y compararon cuantitativamente el desempeño de los métodos según propiedades de la serie como la longitud, la estacionalidad, la tendencia y la autocorrelación. Es un buen ejemplo de cómo comparar con rigor resultados obtenidos bajo distintas condiciones de calidad, aunque aplicado a otro tipo de problema.
+
+Amézquita Tovar y Eslava Blanco (2022) usaron aprendizaje supervisado para atacar dos dimensiones de calidad en bases de datos gubernamentales: la completitud, imputando valores faltantes de peso y talla en registros de salud, y la coherencia, detectando registros que violaban reglas de negocio en una base de bienestar infantil. Lo interesante para nosotros es que cuantifican cuántos datos nulos e incoherentes lograron reducir. Gil González et al. (2014) analizaron cómo distintas técnicas de procesamiento y normalización de los datos de entrada alteran la precisión de un localizador de fallas en sistemas de distribución eléctrica; su conclusión, que las características de los datos de entrada pueden cambiar de manera sustancial el desempeño del método, es el mismo principio que queremos comprobar para los duplicados.
+
+Contreras Contreras et al. (2022) plantearon una metodología para desarrollar y evaluar técnicas de agrupamiento con aprendizaje automático, con especial atención al tratamiento previo de los datos y a la evaluación cuantitativa de los resultados. Nos sirve como referente para organizar experimentos en los que varias versiones de un mismo conjunto de datos pasan por un procedimiento analítico idéntico. Por último, en el campo de la salud, Yepes-Delgado et al. (2023) describieron las estrategias de aseguramiento de calidad de un estudio de cohorte sobre enfermedad renal crónica en Colombia (doble digitación, protocolos estandarizados, capacitación y pruebas de concordancia entre evaluadores). Reportan una disminución progresiva de los errores de captura y valores de Kappa entre 0,73 y 0,96 en las variables críticas, lo que muestra de forma empírica que el control sistemático de la calidad se refleja en la confiabilidad de los análisis posteriores.
+
+\seccioncorta{Desempeño analítico y condiciones de los datos}{Comparar el desempeño analítico bajo distintas condiciones de los datos}
+
+Un tercer grupo de trabajos no trata directamente problemas de calidad, pero ofrece buenos ejemplos de cómo comparar modelos y análisis con métricas cuantitativas, algo que necesitamos para diseñar nuestro experimento.
+
+Pérez-Gutiérrez (2020) comparó varias técnicas de minería de datos aplicadas a información académica para identificar indicios de deserción estudiantil. Su esquema, en el que distintos métodos se evalúan con las mismas métricas sobre el mismo conjunto de datos, se puede trasladar casi sin cambios a nuestra comparación entre la versión limpia y las versiones con duplicados. Contreras Bravo et al. (2022) construyeron un modelo de predicción del rendimiento académico universitario con varios algoritmos supervisados (k vecinos más cercanos, árboles de decisión, máquinas de vectores de soporte, Naive Bayes y análisis discriminante lineal) sobre un conjunto con más de trescientas variables. Su metodología describe con detalle la limpieza previa (eliminación de observaciones no deseadas, corrección de errores estructurales y tratamiento de faltantes) y advierte sobre su efecto en la fiabilidad de los resultados, por lo que es uno de los antecedentes metodológicos más cercanos a nuestro diseño.
+
+Quevedo Piratova et al. (2024) compararon árboles de decisión, regresión lineal y bosques aleatorios para predecir datos dependientes consecutivos con Python y Scikit-learn. Encontraron que un algoritmo más complejo no garantiza por sí solo mejor precisión y que la configuración del modelo y de los datos de entrada pesa tanto como la elección del algoritmo. Ese hallazgo refuerza nuestra decisión de aislar una sola condición de los datos (los duplicados) en lugar de atribuir las diferencias al método de análisis. Finalmente, Hernández-Ponce et al. (2024), con un modelo de aprendizaje profundo semisupervisado para clasificar limones defectuosos, y Ramírez-Noriega et al. (2026), con un modelo que predice la distracción de estudiantes universitarios por el uso de redes sociales a partir de más de mil encuestas, muestran cómo reportar con rigor el desempeño de un análisis mediante métricas cuantitativas. No abordan la calidad de datos, pero nos ayudan a definir qué métricas reportar.
+
+\seccioncorta{Los duplicados como problema de calidad}{Los duplicados como problema de calidad: lo que se sabe y lo que falta}
+
+Este es el eje que más nos importa y también el más escaso en la literatura regional. Como ya se dijo, Corrales et al. (2016) reconocen la redundancia como una dimensión de calidad, pero no miden su efecto. Candal Vicente (2013), desde un modelo de éxito para sistemas \emph{data warehouse}, advierte que los registros duplicados afectan operaciones de agregación, conteo y generación de indicadores. Tampoco lo comprueba empíricamente, aunque su argumento explica con claridad por qué un duplicado en una infraestructura analítica no es un detalle menor.
+
+Un hallazgo curioso de la revisión es que la evidencia más concreta sobre el tratamiento de duplicados exactos no viene de la ingeniería de datos, sino de revisiones de literatura en otras áreas. Ramos Frometa y Gómez Luna (2024), en su revisión sobre el cultivo de la microalga \emph{Porphyridium cruentum}, eliminaron cerca de 163 registros duplicados de 1\,014 documentos iniciales, alrededor del 16\,\% del corpus. Da Silva Pereira Rodrigues (2023), en una revisión sobre las propiedades medicinales de \emph{Anacardium occidentale}, usó Mendeley Desktop y Rayyan QCRI para depurar los duplicados que resultan de buscar en varias bases de datos a la vez. Ninguno de los dos analiza qué habría pasado sin esa limpieza, pero ambos muestran que la duplicación exacta es frecuente, cuantificable y que su eliminación se volvió un paso rutinario que casi nadie cuestiona.
+
+Hernández-Leal et al. (2017) y Rodríguez Rodríguez (2013) aportan un contexto más general. El primero es una revisión cienciométrica sobre las tecnologías de captura, procesamiento, análisis y visualización de grandes volúmenes de datos; el segundo describe UDMiner, una herramienta de minería de datos con un módulo de preprocesamiento previo a la asociación, la clasificación y el agrupamiento. Su relación con los duplicados es tangencial, pero sitúan el problema en el mundo de los grandes volúmenes, donde un duplicado es un riesgo latente que pocas veces se mide.
+
+Fuera de la literatura regional el panorama es distinto, y conviene decirlo con claridad. La detección de registros duplicados es un campo maduro desde hace años, como lo muestra la revisión de Elmagarmid et al. (2007), aunque centrada sobre todo en duplicados aproximados. Más cerca de nuestra pregunta, el estudio CleanML de Li et al. (2021) evaluó el efecto de limpiar cinco tipos de errores reales, entre ellos los duplicados, sobre siete modelos de clasificación y catorce conjuntos de datos, con pruebas de hipótesis y control de falsos descubrimientos. Encontró que limpiar duplicados e inconsistencias suele tener un impacto bajo en la exactitud de los clasificadores, a diferencia de corregir faltantes o etiquetas erróneas. Mohammed et al. (2025) contaminaron de forma controlada conjuntos de datos tabulares en seis dimensiones de calidad y midieron el efecto sobre diecinueve algoritmos de clasificación, regresión y agrupamiento. Para la dimensión de unicidad (duplicados) el efecto fue pequeño en casi todos los casos; la excepción más clara fue una red neuronal entrenada con un conjunto de apenas mil registros, cuyo desempeño ya caía con un 5\,\% de duplicados.
+
+Estos dos trabajos cambian la forma de plantear nuestra pregunta. Ya no podemos decir que nadie ha medido el efecto de los duplicados, porque sí se ha hecho, y el resultado es incómodo: sobre la exactitud global de un clasificador, el efecto suele ser menor de lo que la intuición sugiere. Pero ambos estudios miden una sola cosa, el desempeño agregado de modelos sobre conjuntos de referencia, y dejan preguntas abiertas que son justamente las nuestras.
+
+\section{Síntesis y vacío en la literatura}
+
+La revisión deja tres conclusiones. Primero, la calidad de datos se puede evaluar de forma objetiva con dimensiones e indicadores, y esa evaluación tiene consecuencias reales sobre la confiabilidad de los análisis. Segundo, hay un cuerpo amplio de trabajos, centrados sobre todo en datos faltantes, coherencia y normalización, que demuestran que intervenir una dimensión de calidad cambia de forma medible los resultados, y que en conjunto nos dan un modelo metodológico sólido para comparar distintos estados de un mismo conjunto de datos. Tercero, la duplicación está reconocida como dimensión de calidad y se elimina de forma rutinaria, pero cuando se ha medido su efecto (Li et al., 2021; Mohammed et al., 2025) se ha hecho sobre la exactitud de clasificadores entrenados con conjuntos de referencia, con resultados que sugieren un impacto moderado o bajo.
+
+A partir de ahí identificamos el vacío concreto que queremos cubrir:
+
+\begin{itemize}
+ \item Ningún estudio revisado mide el efecto de los duplicados exactos sobre indicadores descriptivos (conteos, promedios, medianas, desviaciones, proporciones y rankings) ni sobre estadísticos inferenciales como la prueba chi-cuadrado o la prueba $t$, que son la base de muchos informes y decisiones y que, a diferencia de un clasificador, se alteran de forma directa cuando crece el número de filas.
+ \item Ningún estudio replica un análisis ya publicado, con su metodología y sus datos reales, para ver si los duplicados cambian las conclusiones de ese estudio (qué efectos resultan significativos, qué tan grandes parecen, qué grupos quedan arriba), y no solo una métrica de desempeño.
+ \item La literatura no distingue entre duplicación uniforme (cualquier registro puede repetirse) y duplicación concentrada en un grupo o en una parte de la distribución, que es lo que ocurre, por ejemplo, cuando una carga se repite solo para una fuente. Esa distinción es clave, porque la primera infla conteos y significancias mientras que la segunda además puede sesgar proporciones, promedios y dispersión.
+ \item En la literatura colombiana y latinoamericana revisada no encontramos ningún trabajo que mida experimentalmente el efecto de los duplicados exactos sobre resultados analíticos.
+\end{itemize}
+
+Para cubrir ese vacío tomaremos dos estudios publicados como anclas. El principal es Many Labs 1 (Klein et al., 2014), un proyecto que replicó trece efectos clásicos de la psicología en 36 muestras con un mismo protocolo, para un total de 6\,344 participantes. Lo elegimos por cuatro razones: está revisado por pares y es ampliamente citado; sus datos son públicos con licencia CC0; cada fila corresponde a un participante con un identificador único, de modo que un duplicado exacto tiene un significado inequívoco, y sus resultados centrales, basados en pruebas chi-cuadrado y $t$, se pueden reproducir con exactitud a partir de esos datos (por ejemplo, el chi-cuadrado de 516,4 del efecto de encuadre de ganancia y pérdida). Tiene además una coincidencia que nos parece valiosa: es en sí mismo un estudio sobre replicabilidad, y nosotros lo usamos para medir qué tan frágiles son sus resultados ante un error de datos.
+
+El segundo es el conjunto de datos de Delahoz-Dominguez et al. (2020), que cruza los resultados de las pruebas Saber~11 y Saber~Pro del ICFES para 12\,411 estudiantes de ingeniería en Colombia, junto con variables socioeconómicas como el estrato y el tipo de colegio. Es un artículo de datos revisado por pares, con licencia CC BY 4.0, cuyos resultados son descriptivos (promedios, desviaciones y porcentajes por programa) y también se reproducen con exactitud. Complementa al primero en dos sentidos: cubre los indicadores descriptivos que Many Labs no reporta y aporta datos colombianos, lo que acerca el problema al contexto en el que trabajamos.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=3pt, align=center, text width=5cm, minimum height=1.2cm, font=\small, execute at begin node={\hyphenpenalty=10000\relax}, inner sep=4pt},
+  big/.style={draw, thick, rounded corners=4pt, align=center, text width=6.2cm, font=\small, execute at begin node={\hyphenpenalty=10000\relax}, inner sep=6pt, fill=gray!10},
+  >={Stealth[length=2.5mm]}]
+\node[box] (a) at (0,0) {\textbf{Eje (a)}\\ dimensiones y métricas de calidad};
+\node[box, below=0.35cm of a] (b) {\textbf{Ejes (b) y (c)}\\ comparación antes y después con el mismo análisis};
+\node[box, below=0.35cm of b] (d) {\textbf{Eje (d)}\\ duplicados reconocidos y eliminados de forma rutinaria};
+\node[box, below=0.35cm of d] (i) {\textbf{Li et al. (2021) y Mohammed et al. (2025)}\\ efecto bajo sobre la exactitud de clasificadores};
+\coordinate (m) at ($(b.east)!0.5!(d.east)$);
+\node[big, anchor=west] (p) at ($(m)+(1.8,0)$) {\textbf{Diseño del proyecto}\\[3pt]
+  réplica exacta de dos estudios publicados\\ $+$\\ inyección controlada de duplicados exactos (uniforme y concentrada)\\ $+$\\ comparación de indicadores descriptivos, pruebas estadísticas y tamaños de efecto};
+\node[box, text width=6.2cm, above=0.8cm of p] (an) {\textbf{Anclas}: Many Labs 1 (Klein et al., 2014) y Saber~11/Saber~Pro (Delahoz-Dominguez et al., 2020)};
+\foreach \n in {a,b,d,i} \draw[->] (\n.east) -- (p.west);
+\draw[->] (an) -- (p);
+\end{tikzpicture}
+\caption{Aporte de cada eje de la revisión al diseño de la investigación.}
+\label{fig:aporte}
+\end{figure}
+
+El diseño, resumido en la Figura~\ref{fig:aporte}, consiste en replicar el análisis de cada estudio sobre sus datos originales como línea base, inyectar duplicados exactos en proporciones conocidas (1\,\%, 5\,\%, 10\,\% y 20\,\%) y bajo distintos esquemas de distribución, repetir exactamente el mismo análisis y comparar. Así se aísla el efecto de los duplicados de cualquier otra fuente de variación y se pueden medir los cambios en los indicadores descriptivos, en la significancia estadística, en los tamaños de efecto y en las conclusiones que cada estudio presenta como hallazgos.
+%==================== Fin de PRB3EstadoArte.tex ====================
+
+%Numeración final
+ \backmatter
+
+\begin{thebibliography}{xx}
+%==================== Inicio de Bibliografia.tex ====================
+%Bibliografía en formato APA 7
+
+\bibitem{amezquita2022} Amézquita Tovar, J. C., y Eslava Blanco, H. J. (2022). Supervised learning for data cleaning in the coherence and completeness dimensions. \emph{Ingeniería y Competitividad, 24}(2). \url{https://doi.org/10.25100/iyc.v24i02.11361}
+
+\bibitem{candal2013} Candal Vicente, I. (2013). Modelo de éxito de un data warehouse. \emph{Tecnura, 17}(35), 116--125. \url{https://doi.org/10.14483/udistrital.jour.tecnura.2013.1.a10}
+
+\bibitem{contrerasbravo2022} Contreras Bravo, L. E., Nieves-Pimiento, N., y Gonzalez-Guerrero, K. (2022). Prediction of university-level academic performance through machine learning mechanisms and supervised methods. \emph{Ingeniería, 28}(1), e19514. \url{https://doi.org/10.14483/23448393.19514}
+
+\bibitem{contrerascontreras2022} Contreras Contreras, G. F., Medina Delgado, B., Acevedo Jaimes, B. R., y Guevara Ibarra, D. (2022). Metodología de desarrollo de técnicas de agrupamiento de datos usando aprendizaje automático. \emph{Tecnura, 26}(72), 42--58. \url{https://doi.org/10.14483/22487638.17246}
+
+\bibitem{corrales2016} Corrales, D. C., Ledezma, A. I., y Corrales, J. C. (2016). A systematic review of data quality issues in knowledge discovery tasks. \emph{Revista Ingenierías Universidad de Medellín, 15}(28), 125--149. \url{https://doi.org/10.22395/rium.v15n28a7}
+
+\bibitem{dasilva2023} Da Silva Pereira Rodrigues, A. R. (2023). Potencial antioxidante, antimicrobiano, anti-inflamatória e antifúngica da \emph{Anacardium occidentale} (Linn): revisão de literatura. \emph{Revista Colombiana de Ciencias Químico-Farmacéuticas, 52}(1). \url{https://doi.org/10.15446/rcciquifa.v52n1.105316}
+
+\bibitem{delahoz2020} Delahoz-Dominguez, E., Zuluaga, R., y Fontalvo-Herrera, T. (2020). Dataset of academic performance evolution for engineering students. \emph{Data in Brief, 30}, 105537. \url{https://doi.org/10.1016/j.dib.2020.105537}
+
+\bibitem{elmagarmid2007} Elmagarmid, A. K., Ipeirotis, P. G., y Verykios, V. S. (2007). Duplicate record detection: A survey. \emph{IEEE Transactions on Knowledge and Data Engineering, 19}(1), 1--16. \url{https://doi.org/10.1109/TKDE.2007.250581}
+
+\bibitem{fuentes2014} Fuentes-Moya, C. L., Caro-Gutiérrez, M. A., y Rodríguez-Ríos, A. E. (2014). Influencia de la calidad de datos en la preferencia de los ciudadanos en aplicaciones de e-Government municipal. \emph{Revista Facultad de Ingeniería Universidad de Antioquia}, (73).
+
+\bibitem{gil2014} Gil González, W. J., Mora Flórez, J. J., y Pérez Londoño, S. M. (2014). Análisis del procesamiento de los datos de entrada para un localizador de fallas en sistemas de distribución. \emph{Tecnura, 18}(41), 64--75. \url{https://doi.org/10.14483/udistrital.jour.tecnura.2014.3.a05}
+
+\bibitem{gomez2025} Gómez, J. A., Benavides, I. F., y Selvaraj, J. J. (2025). Evaluation of the Known Sub-Sequence Algorithm (KSSA) for optimal use in time series of tuna fishing in the Pacific Ocean. \emph{Ingeniería e Investigación, 45}(1), e115627. \url{https://doi.org/10.15446/ing.investig.115627}
+
+\bibitem{hernandezleal2017} Hernández-Leal, E. J., Duque-Méndez, N. D., y Moreno-Cadavid, J. (2017). Big Data: una exploración de investigaciones, tecnologías y casos de aplicación. \emph{TecnoLógicas, 20}(39). \url{https://revistas.itm.edu.co/index.php/tecnologicas/article/view/685}
+
+\bibitem{hernandezponce2024} Hernández-Ponce, A.-M., Ornelas-Rodríguez, F.-J., Hurtado-Ramos, J.-B., Ramírez-Pedraza, P.-A., y González-Barbosa, J.-J. (2024). A semi-supervised deep learning model for defective lime classification. \emph{Ingeniería e Investigación, 44}(3), e112835. \url{https://doi.org/10.15446/ing.investig.112835}
+
+\bibitem{klein2014} Klein, R. A., Ratliff, K. A., Vianello, M., Adams, R. B., Jr., Bahník, Š., Bernstein, M. J., Bocian, K., Brandt, M. J., Brooks, B., Brumbaugh, C. C., Cemalcilar, Z., Chandler, J., Cheong, W., Davis, W. E., Devos, T., Eisner, M., Frankowska, N., Furrow, D., Galliani, E. M., \ldots{} Nosek, B. A. (2014). Investigating variation in replicability: A ``many labs'' replication project. \emph{Social Psychology, 45}(3), 142--152. \url{https://doi.org/10.1027/1864-9335/a000178}
+
+\bibitem{li2021} Li, P., Rao, X., Blase, J., Zhang, Y., Chu, X., y Zhang, C. (2021). CleanML: A study for evaluating the impact of data cleaning on ML classification tasks. En \emph{2021 IEEE 37th International Conference on Data Engineering (ICDE)} (pp. 13--24). IEEE.
+
+\bibitem{martinez2022} Martínez, R., Pons, C., Rodríguez, R., y Vera, P. (2022). Estudio de calidad de datos de gobierno abierto relacionados con COVID-19 en América Latina. \emph{Revista Facultad de Ingeniería Universidad de Antioquia}. \url{https://doi.org/10.17533/udea.redin.20220579}
+
+\bibitem{mohammed2025} Mohammed, S., Budach, L., Feuerpfeil, M., Ihde, N., Nathansen, A., Noack, N. S., Patzlaff, H., Naumann, F., y Harmouch, H. (2025). The effects of data quality on machine learning performance on tabular data. \emph{Information Systems, 132}, 102549. \url{https://doi.org/10.1016/j.is.2025.102549}
+
+\bibitem{perez2020} Pérez-Gutiérrez, B. R. (2020). Comparación de técnicas de minería de datos para identificar indicios de deserción estudiantil, a partir del desempeño académico. \emph{Revista UIS Ingenierías, 19}. \url{https://revistas.uis.edu.co/index.php/revistauisingenierias/article/view/9834}
+
+\bibitem{piedrahita2022} Piedrahita Mazo, A., y Montoya Quintero, D. (2022). Evaluación de la calidad de la información en las organizaciones, a través de herramientas tecnológicas. \emph{Signos: Investigación en Sistemas de Gestión, 14}(2). \url{https://revistas.usantotomas.edu.co/index.php/signos/article/view/7785}
+
+\bibitem{quevedo2024} Quevedo Piratova, D. A., Londoño Villalba, J. U., y González Gómez, A. A. (2024). Aplicación de machine learning para predicciones de datos dependientes consecutivos de tipo $\{[(a, b)\rightarrow c]\rightarrow d\}$. \emph{Tecnura, 28}(79), 66--86. \url{https://doi.org/10.14483/22487638.22094}
+
+\bibitem{ramireznoriega2026} Ramírez-Noriega, A., Martínez-Ramírez, Y., Figueroa Pérez, J. F., Tripp-Barba, C., y Murillo-Corrales, M. A. (2026). Minería de datos y redes sociales: predicción de la distracción en estudiantes de educación superior. \emph{Tecnura, 30}(87), 54--71. \url{https://doi.org/10.14483/22487638.24842}
+
+\bibitem{ramos2024} Ramos Frometa, C., y Gómez Luna, L. M. (2024). Cultivo y aplicaciones de \emph{Porphyridium cruentum}: principales tendencias y proyecciones. \emph{Revista Colombiana de Biotecnología, 26}(1), 62--80. \url{https://doi.org/10.15446/rev.colomb.biote.v26n1.108815}
+
+\bibitem{rodriguez2013} Rodríguez Rodríguez, J. E. (2013). Desarrollo de herramientas para minería de datos ``UDMiner''. \emph{Revista Vínculos, 9}(1), 21--40. \url{https://doi.org/10.14483/2322939X.4207}
+
+\bibitem{romero2023} Romero Duque, G. A., González Prieto, C. A., Díaz Barriosnuevos, M. A., y Rueda Menjura, N. A. (2023). Revisión y perspectivas para la construcción de bases de datos robustas con datos faltantes: caso aplicado a información financiera. \emph{Tecnura, 27}(75), 12--37. \url{https://doi.org/10.14483/22487638.18268}
+
+\bibitem{wang1996} Wang, R. Y., y Strong, D. M. (1996). Beyond accuracy: What data quality means to data consumers. \emph{Journal of Management Information Systems, 12}(4), 5--33. \url{https://doi.org/10.1080/07421222.1996.11518099}
+
+\bibitem{yepes2023} Yepes-Delgado, C. E., Muñoz-González, S., y Zuleta-Tobón, J. J. (2023). Aseguramiento y control de la calidad de los datos en un estudio de cohorte en Colombia. \emph{Salud UIS, 55}, e23072. \url{https://doi.org/10.18273/saluduis.55.e:23072}
+%==================== Fin de Bibliografia.tex ====================
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,285 @@
+%Este es documento para el libro del proyecto
+%Entrega: Anteproyecto - Parte 2
+%Compilador en Overleaf: Menu > Compiler > LaTeX (latex + dvips + ps2pdf)
+ \documentclass[11pt,openany,oneside,letterpaper]{book}
+ \usepackage[spanish]{babel}
+ %\usepackage[latin1]{inputenc}
+ \usepackage[utf8]{inputenc}
+
+%%Dimensiones de página
+ \usepackage[hmargin={3.0cm,2.5cm},vmargin={3.0cm,2.5cm}]{geometry}
+ \usepackage[spanish]{layout}
+ \marginparwidth=2.0cm
+ %\layout %Para mirar como esta configurada la página
+
+%Sangria y espacio entre párrafos
+ %\parindent=0pt
+ \parskip=10pt
+
+%Paquetes empleados
+ \usepackage{array,amsmath,amssymb,amsfonts,pifont,verbatim}
+ \usepackage{dsfont}
+
+%Paquetes para el formato del libro
+ \usepackage{fancyhdr}
+ \usepackage[]{fncychap}
+
+%Paquetes para las gráficas
+ \usepackage{pstricks,pst-all}
+
+%Paquete de manejo gráfico
+ \usepackage[dvips]{graphicx}
+ %Carpeta de imágenes (en Overleaf: crear la carpeta multimedia_latex y subir allí EscudoUD.eps)
+ \graphicspath{{multimedia_latex/}}
+
+%Paquete para insertar mejor los objetos flotantes
+ \usepackage{float}
+
+%Paquetes agregados para tablas, figuras vectoriales y enlaces
+ \usepackage{booktabs,tabularx,longtable,multirow}
+ \usepackage{url}
+ \usepackage{tikz}
+ \usetikzlibrary{babel,positioning,arrows.meta,shapes.geometric,fit,calc,patterns}
+ \usepackage{pgfplots}
+ \pgfplotsset{compat=1.16}
+
+%Sección con título corto solo en el encabezado de página (el índice conserva el título completo)
+ \newcommand{\seccioncorta}[2]{{\renewcommand{\sectionmark}[1]{}\section{#2}}\markright{\MakeUppercase{\thesection.\ #1}}}
+%Redefinition de títulos y rótulos
+ \renewcommand{\listtablename}{\'Indice de tablas}
+ \renewcommand{\tablename}{Tabla}
+ \addto\captionsspanish{\renewcommand{\listtablename}{\'Indice de tablas}\renewcommand{\tablename}{Tabla}}
+
+%Bibliografía en formato APA: sin etiquetas numéricas y con sangría francesa
+ \makeatletter
+ \renewenvironment{thebibliography}[1]
+  {\chapter*{\bibname}\addcontentsline{toc}{chapter}{\bibname}%
+   \def\@biblabel##1{}\list{}{\usecounter{enumiv}\setlength{\leftmargin}{1.27cm}\setlength{\itemindent}{-1.27cm}%
+   \setlength{\itemsep}{4pt}\setlength{\parsep}{0pt}}\sloppy}
+  {\endlist}
+ \makeatother
+
+\begin{document}
+%==================== Inicio de PRA0Portada.tex ====================
+%PÁGINA DE LA PORTADA
+\thispagestyle{empty}
+\begin{center}
+\includegraphics[scale=0.25]{EscudoUD.eps}\\
+\vspace*{1.5cm}
+
+{\large \bf Evaluación del impacto de la calidad de datos en la precisión de resultados analíticos: un enfoque centrado en duplicados exactos}\\
+\vspace*{1.2cm}
+
+{\Large \bf Anteproyecto - Parte 2}\\
+\vspace*{2.5cm}
+
+{\large Integrantes:}\\[0.3cm]
+David Martínez Rincón - 20222020167\\
+Juan David Pulido Rodríguez - 20202020063\\
+Santiago Alfonso Arias - 20222020093\\
+\vspace*{2cm}
+
+Docente: Helbert Eduardo Espitia Cuchango\\
+\vspace*{2.5cm}
+
+{\large METODOLOGÍA DE LA INVESTIGACIÓN\\
+UNIVERSIDAD DISTRITAL FRANCISCO JOSÉ DE CALDAS\\
+FACULTAD DE INGENIERÍA\\
+INGENIERÍA DE SISTEMAS\\
+BOGOTÁ D.C., COLOMBIA\\
+2026}
+\end{center}
+\newpage
+%==================== Fin de PRA0Portada.tex ====================
+
+%Numeración inicial
+ \frontmatter
+ \tableofcontents
+ %\listoffigures
+ %\listoftables
+
+%Numeración principal
+ \mainmatter
+
+%==================== Inicio de PRB2Objetivos.tex ====================
+\chapter{Objetivos}
+
+\section{Objetivo general y objetivos específicos}
+
+\subsection{Objetivo general}
+
+Evaluar el efecto de los duplicados exactos sobre la precisión de resultados analíticos descriptivos e inferenciales, replicando el análisis de dos estudios publicados, Many Labs~1 (Klein et al., 2014) y el conjunto de datos Saber~11/Saber~Pro de Delahoz-Dominguez et al. (2020), y comparando los resultados de su línea base con versiones de los mismos datos a las que se les inyectan duplicados de forma controlada, usando PostgreSQL y Python.
+
+\subsection{Objetivos específicos}
+
+\begin{enumerate}
+ \item Identificar, a partir de la revisión documental, los conceptos de calidad de datos y de duplicación de registros que sustentan el estudio, y los trabajos previos que han medido el efecto de los duplicados sobre resultados analíticos.
+ \item Construir una línea base para cada estudio a partir de sus datos públicos, verificando la ausencia de duplicados exactos y reproduciendo los resultados que reportan los autores.
+ \item Generar de forma reproducible versiones de cada conjunto de datos con 1\,\%, 5\,\%, 10\,\% y 20\,\% de duplicados exactos, bajo tres tipos de esquema: uniforme, concentrado en un grupo natural de los datos y concentrado según el valor del resultado que se mide.
+ \item Calcular sobre todas las versiones de Saber~11/Saber~Pro, con consultas idénticas en PostgreSQL, un conjunto fijo de indicadores descriptivos: conteos, promedios, medianas, desviaciones estándar, proporciones, el ranking de programas académicos y una correlación.
+ \item Replicar sobre todas las versiones de Many Labs~1 las pruebas chi-cuadrado y $t$ de los efectos seleccionados, y medir los cambios en el estadístico de prueba, el valor $p$ y los tamaños de efecto (V de Cramér y $d$ de Cohen).
+ \item Aplicar la deduplicación exacta en PostgreSQL y comprobar que todos los resultados vuelven a los valores de la línea base.
+ \item Determinar, mediante métricas objetivas, qué resultados son más sensibles a los duplicados y en qué condiciones de nivel y distribución la distorsión se vuelve relevante.
+\end{enumerate}
+%==================== Fin de PRB2Objetivos.tex ====================
+%==================== Inicio de PRB1Justificacion.tex ====================
+\chapter{Justificación}
+
+Cualquier informe, indicador o análisis estadístico depende de los datos con los que se construye. Una base de datos puede tener muchos problemas de calidad y uno de los más comunes es la duplicación de registros, que aparece cuando una carga se ejecuta dos veces, cuando se integran fuentes que comparten información o cuando una migración no controla la unicidad. Lo delicado de los duplicados es que no rompen nada: la consulta corre, la prueba estadística arroja un valor $p$ y el tablero muestra cifras. El error pasa desapercibido y se refleja en los resultados.
+
+Los duplicados exactos, es decir, filas idénticas en todas sus columnas, son el caso más simple de este problema y por eso se pueden estudiar de forma controlada. La literatura los reconoce como una dimensión de la calidad de datos (Corrales et al., 2016) y advierte que afectan operaciones de conteo, agregación y generación de indicadores (Candal Vicente, 2013). Sin embargo, cuando se ha medido su efecto, se ha hecho casi siempre sobre la exactitud de clasificadores entrenados con conjuntos de referencia, y el resultado ha sido que ese efecto suele ser bajo (Li et al., 2021; Mohammed et al., 2025). Eso deja por fuera justamente los números que más se usan para decidir: un promedio, una proporción por grupo, un ranking, un valor $p$ o un tamaño de efecto. Un duplicado casi no mueve la exactitud de un modelo, pero puede cambiar qué grupo aparece primero en un informe, hacer que una prueba parezca más contundente de lo que es o hacer que un efecto parezca más pequeño.
+
+Este proyecto busca llenar ese vacío con un diseño concreto. En lugar de trabajar con datos artificiales, toma dos estudios ya publicados, con datos públicos y resultados que se pueden reproducir con exactitud, y mide cuánto cambian esos resultados cuando se les agregan duplicados en proporciones conocidas. El estudio ancla es Many Labs~1 (Klein et al., 2014), un proyecto que replicó trece efectos clásicos de la psicología en 36 muestras y 6\,344 participantes, cuyos resultados centrales son pruebas chi-cuadrado y $t$. El segundo caso es el conjunto de datos de Delahoz-Dominguez et al. (2020), con los resultados de las pruebas Saber~11 y Saber~Pro de 12\,411 estudiantes de ingeniería en Colombia, cuyos resultados son descriptivos. Los escogimos porque en ambos cada fila es una persona con un identificador único, de modo que un duplicado exacto tiene un significado claro, y porque juntos permiten evaluar los dos tipos de resultados que más se usan para decidir: los inferenciales y los descriptivos. El segundo caso, además, acerca el problema al contexto colombiano.
+
+También diferenciamos entre una duplicación uniforme y una concentrada, algo que la literatura revisada no distingue y que, según una exploración preliminar que hicimos al verificar los datos, cambia por completo la magnitud del efecto. En Saber, agregar un 10\,\% de duplicados al azar movió el puntaje promedio apenas 0,01 puntos, mientras que la misma cantidad concentrada en el 10\,\% de estudiantes con menor puntaje lo redujo 3,6 puntos y aumentó la desviación estándar un 8\,\%. En Many Labs, duplicar al azar infló el chi-cuadrado en la misma proporción que el número de filas sin cambiar la fuerza del efecto, pero duplicar una sola combinación de grupo y respuesta redujo la V de Cramér de 0,287 a 0,174 con el mismo 10\,\%.
+
+Desde la Ingeniería de Sistemas, el proyecto conecta la calidad de datos con el trabajo diario en bases de datos e ingeniería de datos. PostgreSQL se usará para almacenar las versiones de cada conjunto de datos, inyectar y eliminar duplicados y ejecutar las consultas analíticas; Python, para preparar los datos, orquestar el experimento y calcular las pruebas estadísticas. Los resultados darán criterios medibles para decidir cuándo la deduplicación es indispensable y cuándo su omisión tiene un efecto menor, algo útil para quien diseña procesos de carga, integración y limpieza en una organización.
+%==================== Fin de PRB1Justificacion.tex ====================
+%==================== Inicio de PRB6Alcance.tex ====================
+\chapter{Alcance}
+
+El proyecto estudia de forma experimental el efecto de los duplicados exactos sobre los resultados analíticos de dos estudios publicados. En los dos casos se sigue el mismo protocolo (Figura~\ref{fig:protocolo}): se replica el análisis publicado sobre los datos originales, se inyectan duplicados en proporciones y con distribuciones conocidas, se repite exactamente el mismo análisis y se compara con la línea base y con las versiones deduplicadas.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  st/.style={draw, rounded corners=3pt, align=center, text width=2.8cm, minimum height=1.2cm, font=\small, execute at begin node={\hyphenpenalty=10000\relax}},
+  an/.style={st, fill=gray!12, text width=3.6cm, minimum height=1.0cm},
+  lab/.style={font=\scriptsize, align=center},
+  >={Stealth[length=2.5mm]}]
+\node[an] (ml) at (-0.2,0.75) {\textbf{Many Labs~1}\\ pruebas $\chi^2$ y $t$};
+\node[an] (sb) at (-0.2,-0.75) {\textbf{Saber~11/Saber~Pro}\\ indicadores descriptivos};
+\node[st] (lb) at (3.9,0) {\textbf{Línea base}\\ réplica exacta de lo publicado};
+\node[st] (in) at (7.5,0) {\textbf{Inyección}\\ 4 niveles $\times$ 3 esquemas $\times$ 10 semillas};
+\node[st] (al) at (11.1,0) {\textbf{Mismo análisis}\\ sobre cada versión};
+\node[st] (de) at (11.1,-3.0) {\textbf{Deduplicación}\\ \texttt{SELECT DISTINCT}};
+\node[st] (co) at (6.0,-3.0) {\textbf{Comparación}\\ con la línea base};
+\node[st, text width=6.2cm, minimum height=0.9cm, font=\footnotesize] (me) at (6.0,-4.9) {Métricas: error relativo, puntos porcentuales, $\tau$ de Kendall, $\chi^2/\chi^2_0$, valor $p$, V de Cramér y $d$ de Cohen};
+\draw[->] (ml.east) -- (lb.west); \draw[->] (sb.east) -- (lb.west);
+\draw[->] (lb) -- (in); \draw[->] (in) -- (al); \draw[->] (al) -- (de);
+\draw[->] (al.south west) -- node[lab, sloped, above=1pt] {resultados con duplicados} (co.north east);
+\draw[->] (de) -- node[lab, below=2pt] {¿vuelve a\\ la base?} (co);
+\draw[->, dashed] (lb.south) |- node[lab, pos=0.4, left] {valores de\\ referencia} (co.west);
+\draw[->] (co) -- (me);
+\end{tikzpicture}
+\caption{Protocolo experimental que se aplica a cada uno de los dos estudios.}
+\label{fig:protocolo}
+\end{figure}
+
+\section{Datos}
+
+\textbf{Many Labs~1.} Se usará el archivo depurado que publicaron Klein et al. (2014) en el Open Science Framework (\url{https://osf.io/pqf9r}), con licencia CC0 y sin registro previo. Tiene 6\,344 filas y 382 columnas; cada fila es un participante con un identificador de sesión único, y las 36 muestras van desde 79 hasta 1\,329 participantes. Al revisar el archivo comprobamos que no tiene ninguna fila repetida. Se trabajará con los cinco efectos cuyos resultados publicados se reproducen con exactitud a partir de esos datos: tres pruebas chi-cuadrado (encuadre de ganancia y pérdida, permitir frente a prohibir y escalas de categorías bajas frente a altas) y dos pruebas $t$ (dos de las preguntas de anclaje). Por ejemplo, el chi-cuadrado del efecto de encuadre es 516,4 con 6\,271 participantes, el mismo valor que reporta el artículo.
+
+\textbf{Saber~11/Saber~Pro.} Se usará el conjunto de datos de Delahoz-Dominguez et al. (2020), publicado en Mendeley Data (\url{https://data.mendeley.com/datasets/83tcx8psxv}) con licencia CC BY 4.0. Es un archivo de Excel con 12\,411 filas y 45 columnas, una de ellas vacía; cada fila es un estudiante con un código único, y tampoco tiene filas repetidas. Contiene los puntajes de Saber~11 y Saber~Pro, el programa académico y variables socioeconómicas como el estrato y el tipo de colegio. Sus resultados publicados (promedios, desviaciones estándar y porcentajes por programa) se reproducen con exactitud.
+
+Como ninguno de los dos archivos tiene duplicados y ambos traen un identificador único por persona, en este proyecto un duplicado exacto es una fila idéntica a otra en todas sus columnas, incluido ese identificador: la misma persona contada dos veces.
+
+\section{Diseño experimental}
+
+\begin{itemize}
+ \item \textbf{Niveles de duplicación:} 0\,\% (línea base), 1\,\%, 5\,\%, 10\,\% y 20\,\% del tamaño de cada base.
+ \item \textbf{Esquemas de inyección:} tres tipos, que se ilustran en la Figura~\ref{fig:esquemas} y se concretan para cada estudio en la Tabla~\ref{tab:esquemas}.
+ \item \textbf{Repeticiones:} 10 semillas por combinación de nivel y esquema, con el fin de separar el efecto de los duplicados de la variación aleatoria.
+\end{itemize}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\pgfplotsset{esq/.style={width=0.47\textwidth, height=3.8cm, domain=-3.5:3.5, samples=120, axis lines=left, ytick=\empty, xtick=\empty, ymin=0, ymax=1.62, xlabel={valor de la variable analizada}, xlabel style={font=\scriptsize}, title style={font=\small\bfseries, yshift=-4pt}, every axis plot/.append style={line width=0.4pt}}}
+\begin{axis}[esq, name=p1, title={Uniforme}]
+ \addplot[fill=red!45, draw=red!60!black] {1.2*exp(-x^2/2)} \closedcycle;
+ \addplot[fill=gray!35, draw=black] {exp(-x^2/2)} \closedcycle;
+\end{axis}
+\begin{axis}[esq, name=p2, at={($(p1.east)+(0.9cm,0)$)}, anchor=west, title={Concentrado en un grupo natural}]
+ \addplot[fill=red!45, draw=red!60!black] {exp(-x^2/2) + 0.55*exp(-(x+0.7)^2/(2*0.75^2))} \closedcycle;
+ \addplot[fill=gray!35, draw=black] {exp(-x^2/2)} \closedcycle;
+ \addplot[dashed, black] {0.6*exp(-(x+0.7)^2/(2*0.75^2))};
+\end{axis}
+\begin{axis}[esq, name=p3, at={($(p1.south)+(0,-1.5cm)$)}, anchor=north, title={Según el resultado: una cola}]
+ \addplot[fill=red!45, draw=red!60!black] {exp(-x^2/2)*(1 + (x<-1.28))} \closedcycle;
+ \addplot[fill=gray!35, draw=black] {exp(-x^2/2)} \closedcycle;
+\end{axis}
+\begin{axis}[esq, name=p4, at={($(p3.east)+(0.9cm,0)$)}, anchor=west, title={Según el resultado: dos colas}]
+ \addplot[fill=red!45, draw=red!60!black] {exp(-x^2/2)*(1 + 0.6*(abs(x)>1.28))} \closedcycle;
+ \addplot[fill=gray!35, draw=black] {exp(-x^2/2)} \closedcycle;
+\end{axis}
+\end{tikzpicture}
+\caption{Esquemas de inyección. En gris, la distribución original de la variable analizada; en rojo, los registros duplicados que se agregan. En el esquema de grupo natural la línea punteada representa la distribución de ese grupo, que no tiene por qué coincidir con la del total.}
+\label{fig:esquemas}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Esquemas de inyección en cada estudio}
+\label{tab:esquemas}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Esquema} & \textbf{Many Labs~1} & \textbf{Saber~11/Saber~Pro} \\
+\midrule
+Uniforme & Cualquier participante puede duplicarse & Cualquier estudiante puede duplicarse \\
+Concentrado en un grupo natural & Solo participantes del sitio de recolección más grande (1\,329), como si un laboratorio hubiera subido su lote dos veces & Solo estudiantes de estrato 1 (1\,709) \\
+Concentrado según el resultado & En las pruebas chi-cuadrado, una sola combinación de grupo y respuesta; en las pruebas $t$, las respuestas extremas de uno de los grupos & Estudiantes del decil más bajo del puntaje global (cola baja) o de los deciles más bajo y más alto (dos colas) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Resultados que se evaluarán}
+
+\begin{table}[H]
+\centering
+\caption{Resultados y métricas de comparación}
+\label{tab:resultados}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Nivel de análisis} & \textbf{Resultados} & \textbf{Métrica de comparación} \\
+\midrule
+Descriptivo (Saber~11/Saber~Pro, consultas SQL) & Total de estudiantes; media, mediana, desviación estándar, mínimo y máximo de los puntajes; porcentaje de estudiantes de colegio público y en el decil más bajo; indicadores por programa; ranking de programas y correlación entre puntajes & Error relativo porcentual, diferencia en puntos porcentuales y tau de Kendall para el ranking \\
+\addlinespace
+Inferencial (Many Labs~1) & Pruebas chi-cuadrado de tres efectos y pruebas $t$ de dos efectos & Razón del estadístico frente a la línea base, valor $p$, V de Cramér y $d$ de Cohen \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La comparación entre el estadístico de prueba y el tamaño de efecto es central en el nivel inferencial: el primero depende del número de filas y el segundo no, así que mirarlos juntos permite separar un cambio en la ``certeza'' aparente de un cambio en la fuerza real del efecto. Como los efectos de la línea base tienen valores $p$ prácticamente nulos, el interés no está en si cruzan el umbral de 0,05, sino en cuánto cambian la magnitud del estadístico y el tamaño de efecto.
+
+\section{Herramientas}
+
+PostgreSQL 16 para el almacenamiento, la inyección, las consultas y la deduplicación; Python 3.12 con pandas, openpyxl y psycopg~3 para la preparación y la carga de los datos, y con SciPy y NumPy para las pruebas estadísticas y los tamaños de efecto. El análisis original de Many Labs~1 se publicó en SPSS, así que lo reimplementaremos en Python y validaremos que reproduce los valores del artículo antes de usarlo. Las gráficas se harán con matplotlib, y el control de versiones de scripts, semillas y resultados con Git y un repositorio privado en GitHub.
+
+\section{Lo que no incluye el proyecto}
+
+\begin{itemize}
+ \item Duplicados aproximados o difusos, ni la comparación de algoritmos de detección de duplicados.
+ \item Otros problemas de calidad de datos, como valores faltantes, valores incorrectos, inconsistencias, errores de formato o datos desactualizados.
+ \item Modelos predictivos o de aprendizaje automático. Ninguno de los dos estudios ancla los usa, y la literatura ya ha medido el efecto de los duplicados sobre ese tipo de modelos.
+ \item Los trece efectos de Many Labs~1 ni su análisis de heterogeneidad entre sitios; se replican solo los cinco efectos que se reproducen con exactitud.
+ \item Conclusiones sustantivas sobre psicología o sobre el desempeño académico de los estudiantes. El tema de los datos es solo el medio para medir el efecto de los duplicados.
+ \item La generalización de los resultados a cualquier base de datos. Las conclusiones se refieren a estos conjuntos de datos, a estos indicadores y a estas pruebas.
+\end{itemize}
+
+Delimitado así, el proyecto se concentra en un solo problema de calidad y en un conjunto definido de resultados, lo que permite obtener hallazgos medibles, comparables y explicables en el tiempo del semestre.
+%==================== Fin de PRB6Alcance.tex ====================
+
+%Numeración final
+ \backmatter
+
+\begin{thebibliography}{xx}
+%==================== Inicio de Bibliografia.tex ====================
+%Bibliografía en formato APA 7
+
+\bibitem{candal2013} Candal Vicente, I. (2013). Modelo de éxito de un data warehouse. \emph{Tecnura, 17}(35), 116--125. \url{https://doi.org/10.14483/udistrital.jour.tecnura.2013.1.a10}
+
+\bibitem{corrales2016} Corrales, D. C., Ledezma, A. I., y Corrales, J. C. (2016). A systematic review of data quality issues in knowledge discovery tasks. \emph{Revista Ingenierías Universidad de Medellín, 15}(28), 125--149. \url{https://doi.org/10.22395/rium.v15n28a7}
+
+\bibitem{delahoz2020} Delahoz-Dominguez, E., Zuluaga, R., y Fontalvo-Herrera, T. (2020). Dataset of academic performance evolution for engineering students. \emph{Data in Brief, 30}, 105537. \url{https://doi.org/10.1016/j.dib.2020.105537}
+
+\bibitem{klein2014} Klein, R. A., Ratliff, K. A., Vianello, M., Adams, R. B., Jr., Bahník, Š., Bernstein, M. J., Bocian, K., Brandt, M. J., Brooks, B., Brumbaugh, C. C., Cemalcilar, Z., Chandler, J., Cheong, W., Davis, W. E., Devos, T., Eisner, M., Frankowska, N., Furrow, D., Galliani, E. M., \ldots{} Nosek, B. A. (2014). Investigating variation in replicability: A ``many labs'' replication project. \emph{Social Psychology, 45}(3), 142--152. \url{https://doi.org/10.1027/1864-9335/a000178}
+
+\bibitem{li2021} Li, P., Rao, X., Blase, J., Zhang, Y., Chu, X., y Zhang, C. (2021). CleanML: A study for evaluating the impact of data cleaning on ML classification tasks. En \emph{2021 IEEE 37th International Conference on Data Engineering (ICDE)} (pp. 13--24). IEEE.
+
+\bibitem{mohammed2025} Mohammed, S., Budach, L., Feuerpfeil, M., Ihde, N., Nathansen, A., Noack, N. S., Patzlaff, H., Naumann, F., y Harmouch, H. (2025). The effects of data quality on machine learning performance on tabular data. \emph{Information Systems, 132}, 102549. \url{https://doi.org/10.1016/j.is.2025.102549}
+%==================== Fin de Bibliografia.tex ====================
+\end{thebibliography}
+\end{document}
