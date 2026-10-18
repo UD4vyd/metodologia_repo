@@ -1,0 +1,908 @@
+%Este es documento para el libro del proyecto
+%Entrega: Anteproyecto
+%Compila en Overleaf con pdfLaTeX (por defecto) o con LaTeX (latex + dvips + ps2pdf)
+ \documentclass[11pt,openany,oneside,letterpaper,twocolumn]{book}
+ \usepackage[spanish]{babel}
+ %\usepackage[latin1]{inputenc}
+ \usepackage[utf8]{inputenc}
+
+%%Dimensiones de página
+ \usepackage[hmargin={3.0cm,2.5cm},vmargin={3.0cm,2.5cm}]{geometry}
+ \usepackage[spanish]{layout}
+ \marginparwidth=2.0cm
+ %\layout %Para mirar como esta configurada la página
+
+%Sangria y espacio entre párrafos
+ %\parindent=0pt
+ \parskip=10pt
+
+%Paquetes empleados
+ \usepackage{array,amsmath,amssymb,amsfonts,pifont,verbatim}
+ \usepackage{dsfont}
+
+%Paquetes para el formato del libro
+ \usepackage{fancyhdr}
+ \usepackage[]{fncychap}
+
+%Paquetes para las gráficas (PSTricks solo funciona en modo DVI, así que se carga
+%únicamente cuando se compila con LaTeX; con pdfLaTeX se omite)
+ \usepackage{ifpdf}
+ \ifpdf\else\usepackage{pstricks,pst-all}\fi
+
+%Paquete de manejo gráfico (sin opción de driver: se detecta según el compilador)
+ \usepackage{graphicx}
+ %Carpeta de imágenes (en Overleaf: crear la carpeta multimedia_latex y subir allí EscudoUD.eps)
+ \graphicspath{{multimedia_latex/}}
+
+%Paquete para insertar mejor los objetos flotantes
+ \usepackage{float}
+
+%Paquetes agregados para tablas, figuras vectoriales y enlaces
+ \usepackage{booktabs,tabularx,longtable,multirow}
+ \usepackage{url}
+ \usepackage{tikz}
+ \usetikzlibrary{babel,positioning,arrows.meta,shapes.geometric,fit,calc,patterns}
+ \usepackage{pgfplots}
+ \pgfplotsset{compat=1.16}
+%Separación entre las dos columnas
+ \setlength{\columnsep}{0.7cm}
+%Permite partir las direcciones web largas en la columna
+ \usepackage{xurl}
+
+%Sección con título corto solo en el encabezado de página (el índice conserva el título completo)
+ \newcommand{\seccioncorta}[2]{{\renewcommand{\sectionmark}[1]{}\section{#2}}\markright{\MakeUppercase{\thesection.\ #1}}}
+%Redefinition de títulos y rótulos
+ \renewcommand{\listtablename}{\'Indice de tablas}
+ \renewcommand{\tablename}{Tabla}
+ \addto\captionsspanish{\renewcommand{\listtablename}{\'Indice de tablas}\renewcommand{\tablename}{Tabla}}
+
+%Bibliografía en formato APA: sin etiquetas numéricas y con sangría francesa
+ \makeatletter
+ \renewenvironment{thebibliography}[1]
+  {\chapter*{\bibname}\addcontentsline{toc}{chapter}{\bibname}%
+   \def\@biblabel##1{}\list{}{\usecounter{enumiv}\setlength{\leftmargin}{1.27cm}\setlength{\itemindent}{-1.27cm}%
+   \setlength{\itemsep}{4pt}\setlength{\parsep}{0pt}}\sloppy}
+  {\endlist}
+ \makeatother
+
+\begin{document}
+%Portada e índices a una columna
+ \onecolumn
+%==================== Inicio de PRA0Portada.tex ====================
+%PÁGINA DE LA PORTADA
+\thispagestyle{empty}
+\begin{center}
+\includegraphics[scale=0.25]{EscudoUD.eps}\\
+\vspace*{1.5cm}
+
+{\large \bf Evaluación del impacto de la calidad de datos en la precisión de resultados analíticos: un enfoque centrado en duplicados exactos}\\
+\vspace*{1.2cm}
+
+{\Large \bf Anteproyecto}\\
+\vspace*{2.5cm}
+
+{\large Integrantes:}\\[0.3cm]
+David Martínez Rincón - 20222020167\\
+Juan David Pulido Rodríguez - 20202020063\\
+Santiago Alfonso Arias - 20222020093\\
+\vspace*{2cm}
+
+Docente: Helbert Eduardo Espitia Cuchango\\
+\vspace*{2.5cm}
+
+{\large METODOLOGÍA DE LA INVESTIGACIÓN\\
+UNIVERSIDAD DISTRITAL FRANCISCO JOSÉ DE CALDAS\\
+FACULTAD DE INGENIERÍA\\
+INGENIERÍA DE SISTEMAS\\
+BOGOTÁ D.C., COLOMBIA\\
+2026}
+\end{center}
+\newpage
+%==================== Fin de PRA0Portada.tex ====================
+
+%Numeración inicial
+ \frontmatter
+ \tableofcontents
+ \listoffigures
+ \listoftables
+
+%Numeración principal
+ \mainmatter
+%El contenido va a dos columnas
+ \twocolumn
+
+ %Parte I: formulación del problema
+ \part{Formulación del proyecto}
+%==================== Inicio de PRB0Planteamiento.tex ====================
+\chapter{Planteamiento del problema}
+
+\section{Descripción del problema}
+
+Las organizaciones toman cada vez más decisiones a partir de indicadores, informes y análisis estadísticos construidos sobre bases de datos. La confiabilidad de esas decisiones depende de la calidad de los datos, y uno de los defectos de calidad más frecuentes es la duplicación de registros: la misma persona, transacción o evento aparece más de una vez. Los duplicados aparecen por causas muy comunes en la operación de cualquier sistema de información, como una carga que se ejecuta dos veces, la integración de fuentes que comparten registros o una migración que no controla la unicidad.
+
+El caso más simple es el de los duplicados exactos, filas idénticas en todas sus columnas. Detectarlos y eliminarlos es sencillo, y por eso la deduplicación se volvió un paso rutinario del preprocesamiento. Lo que casi nunca se mide es la otra cara del problema: cuánto se habrían equivocado los resultados si esos duplicados se hubieran quedado en la base. La pregunta no es trivial, porque los duplicados no generan errores visibles. La consulta se ejecuta, la prueba estadística produce un valor $p$ y el informe muestra cifras que parecen razonables, de modo que el error pasa desapercibido.
+
+Los pocos estudios que han medido ese efecto lo hicieron sobre la exactitud de modelos de clasificación entrenados con conjuntos de datos de referencia, y encontraron que suele ser bajo (Li et al., 2021; Mohammed et al., 2025). Sin embargo, los resultados que más se usan para decidir son de otro tipo: conteos, promedios, medianas, proporciones por grupo, rankings, valores $p$ y tamaños de efecto. Esos resultados dependen directamente de cuántas veces aparece cada registro. Un duplicado equivale a darle el doble de peso a una observación, y además rompe el supuesto de independencia en el que se apoyan las pruebas estadísticas. Si los duplicados se reparten al azar, es de esperar que los promedios casi no cambien, pero que la significancia estadística aumente sin que el efecto sea más fuerte. Si se concentran en un grupo o en una parte de la distribución, pueden sesgar proporciones, promedios, dispersión y rankings, y con ello las conclusiones de un estudio.
+
+La revisión de la literatura (capítulo~\ref{cap:estado}) muestra que no hay estudios que midan ese efecto sobre resultados descriptivos e inferenciales de análisis reales, que la distinción entre duplicación uniforme y concentrada no se ha estudiado y que en Colombia y América Latina no se encontró ningún trabajo experimental sobre el tema. En consecuencia, quien diseña o audita un proceso de datos no cuenta con criterios medibles para saber cuándo la presencia de duplicados compromete los resultados y cuándo su efecto es despreciable.
+
+\section{Formulación del problema}
+
+La pregunta que guía la investigación es la siguiente:
+
+\begin{quote}
+\emph{¿Cómo y cuánto afectan los duplicados exactos a los resultados descriptivos e inferenciales de un análisis de datos, según la proporción de registros duplicados y la forma en que se distribuyen con respecto a la variable analizada?}
+\end{quote}
+
+De ella se desprenden cuatro preguntas específicas:
+
+\begin{enumerate}
+ \item ¿Qué tanto cambian los conteos, promedios, medianas, desviaciones, proporciones, rankings y correlaciones de un análisis publicado cuando se le agregan duplicados exactos en proporciones conocidas?
+ \item ¿Cómo cambian los estadísticos de prueba, los valores $p$ y los tamaños de efecto de pruebas chi-cuadrado y $t$ publicadas bajo las mismas condiciones?
+ \item ¿Qué diferencia hay entre una duplicación uniforme, una concentrada en un grupo natural de los datos y una concentrada según el valor del resultado que se mide?
+ \item ¿La deduplicación exacta devuelve todos los resultados a los valores de la línea base?
+\end{enumerate}
+
+\section{Hipótesis}
+
+\textbf{Hipótesis general.} Los duplicados exactos distorsionan los resultados analíticos, y el tamaño de la distorsión depende tanto de la proporción de registros duplicados como de la forma en que se distribuyen con respecto a la variable analizada.
+
+\begin{enumerate}
+ \item[\textbf{H1.}] Los conteos crecen exactamente en el número de filas duplicadas, sin importar el esquema de inyección.
+ \item[\textbf{H2.}] Con duplicación uniforme, los promedios, las medianas, la dispersión, las proporciones y las correlaciones cambian muy poco.
+ \item[\textbf{H3.}] Cuando los duplicados se concentran en un grupo natural de los datos, los indicadores relacionados con ese grupo se sesgan de forma moderada pero sistemática.
+ \item[\textbf{H4.}] Cuando los duplicados se concentran según el valor de la variable analizada, la distorsión es grande y su forma depende de la parte de la distribución que se duplica.
+ \item[\textbf{H5.}] Con duplicación uniforme, los estadísticos de prueba crecen con el número de filas mientras los tamaños de efecto se mantienen; con duplicación concentrada, los tamaños de efecto también cambian.
+ \item[\textbf{H6.}] La deduplicación exacta devuelve todos los resultados a los valores de la línea base.
+\end{enumerate}
+%==================== Fin de PRB0Planteamiento.tex ====================
+%==================== Inicio de PRB3EstadoArte.tex ====================
+\chapter{Estado del arte}\label{cap:estado}
+
+\section{Introducción}
+
+Hoy casi cualquier decisión importante, sea en salud pública, en una empresa o en una entidad del Estado, pasa por algún tipo de análisis de datos. El problema es que el volumen de información creció mucho más rápido que los mecanismos para asegurar su calidad. Un modelo de aprendizaje automático, un indicador estadístico o un tablero de control pueden estar construidos de forma impecable y aun así llegar a conclusiones equivocadas si los datos que los alimentan tienen errores. En ingeniería de datos esto se resume con la expresión \emph{garbage in, garbage out}: la validez de lo que sale depende de lo que entra. Esa idea es el punto de partida de esta investigación.
+
+Dentro de los muchos problemas de calidad que existen (valores faltantes, inconsistencias, errores de digitación, información desactualizada, formatos heterogéneos), nosotros nos concentramos en uno muy concreto: los duplicados exactos, es decir, registros que se repiten de manera idéntica en todas sus columnas dentro de un mismo conjunto de datos. Es un problema fácil de definir y fácil de detectar. Justamente por eso suele darse por resuelto sin que nadie se pregunte cuánto habría cambiado el resultado si esa limpieza no se hubiera hecho. Dejamos por fuera a propósito los duplicados aproximados o difusos (los que requieren medidas de similitud y umbrales de coincidencia), porque ese camino lleva a comparar algoritmos de detección, un campo que ya está bastante trabajado y que no es lo que nos interesa.
+
+Este estado del arte reúne los veinte antecedentes de la revisión documental del grupo, publicados en revistas colombianas y latinoamericanas indexadas, y los complementa con cuatro referentes internacionales que resultan indispensables para ubicar el problema. Los organizamos en cuatro ejes, que se resumen en la Figura~\ref{fig:ejes}: (a) la calidad de datos como objeto de estudio y de medición; (b) el efecto de la limpieza y el preprocesamiento sobre los resultados de un análisis; (c) la comparación del desempeño analítico bajo distintas condiciones de los datos de entrada, y (d) lo que se sabe específicamente sobre los duplicados. Al final presentamos una síntesis y el vacío que esta investigación busca cubrir.
+
+\begin{figure*}[!tp]
+\centering
+\begin{tikzpicture}[
+  eje/.style={draw, rounded corners=3pt, align=left, text width=6.6cm, inner sep=5pt, font=\small, execute at begin node={\hyphenpenalty=10000\relax}},
+  >={Stealth[length=2.5mm]}]
+\node[draw, rounded corners=4pt, thick, align=center, text width=4.6cm, inner sep=6pt, execute at begin node={\hyphenpenalty=10000\relax}, fill=gray!10] (c) at (0,0)
+  {\textbf{Duplicados exactos y precisión de resultados analíticos}};
+\node[eje, anchor=south] (a) at (-3.85,1.4) {
+  {\bfseries (a) La calidad de datos como objeto de estudio}\\[2pt]
+  Wang y Strong (1996)$^{*}$\\ Martínez et al. (2022)\\ Fuentes-Moya et al. (2014)\\
+  Piedrahita Mazo y Montoya Quintero (2022)\\ Corrales et al. (2016)};
+\node[eje, anchor=south] (b) at (3.85,1.4) {
+  {\bfseries (b) Efecto de la limpieza y el preprocesamiento}\\[2pt]
+  Romero Duque et al. (2023)\\ Gómez et al. (2025)\\ Amézquita Tovar y Eslava Blanco (2022)\\
+  Gil González et al. (2014)\\ Contreras Contreras et al. (2022)\\ Yepes-Delgado et al. (2023)};
+\node[eje, anchor=north] (cc) at (-3.85,-1.4) {
+  {\bfseries (c) Comparación del desempeño analítico}\\[2pt]
+  Pérez-Gutiérrez (2020)\\ Contreras Bravo et al. (2022)\\ Quevedo Piratova et al. (2024)\\
+  Hernández-Ponce et al. (2024)\\ Ramírez-Noriega et al. (2026)};
+\node[eje, anchor=north] (d) at (3.85,-1.4) {
+  {\bfseries (d) Los duplicados como problema de calidad}\\[2pt]
+  Candal Vicente (2013)\\ Ramos Frometa y Gómez Luna (2024)\\ Da Silva Pereira Rodrigues (2023)\\
+  Hernández-Leal et al. (2017)\\ Rodríguez Rodríguez (2013)\\
+  Elmagarmid et al. (2007)$^{*}$\\ Li et al. (2021)$^{*}$\\ Mohammed et al. (2025)$^{*}$};
+\draw[->] ([xshift=-1.6cm]c.north) -- ([xshift=-1.6cm]c.north |- a.south);
+\draw[->] ([xshift=1.6cm]c.north) -- ([xshift=1.6cm]c.north |- b.south);
+\draw[->] ([xshift=-1.6cm]c.south) -- ([xshift=-1.6cm]c.south |- cc.north);
+\draw[->] ([xshift=1.6cm]c.south) -- ([xshift=1.6cm]c.south |- d.north);
+\end{tikzpicture}
+\caption{Organización de los antecedentes en los cuatro ejes de la revisión. Los marcados con $^{*}$ son los referentes internacionales; Corrales et al. (2016) aporta a los ejes (a) y (d).}
+\label{fig:ejes}
+\end{figure*}
+
+\section{La calidad de datos como objeto de estudio}
+
+En términos generales, la calidad de datos se entiende como el grado en que un conjunto de datos sirve para el propósito con el que se va a usar. Detrás de esa definición sencilla hay varias dimensiones (completitud, exactitud, consistencia, actualidad, unicidad) y cada una exige sus propios criterios de medición. El trabajo clásico de Wang y Strong (1996) fue decisivo en este punto: a partir de encuestas a usuarios propusieron un marco jerárquico de dimensiones de calidad y mostraron que, para quien consume los datos, la calidad va mucho más allá de la exactitud. Varios de los antecedentes revisados siguen esa línea y tratan la calidad como algo que se puede medir, no como una intuición.
+
+Martínez et al. (2022) evaluaron la calidad de distintos conjuntos de datos abiertos sobre COVID-19 publicados por gobiernos de América Latina, usando dimensiones e indicadores definidos de antemano para comparar las fuentes entre sí. Lo que más nos sirve de su trabajo no es el tema de los datos abiertos, sino la demostración de que la calidad de un conjunto de datos se puede evaluar de forma cuantitativa y repetible. Sin esa condición no tendría sentido comparar una versión limpia de un conjunto de datos con una versión deliberadamente degradada, que es lo que planteamos hacer.
+
+Fuentes-Moya et al. (2014) estudiaron cómo influye la calidad de los datos en la preferencia de los ciudadanos por las aplicaciones de gobierno electrónico municipal. El contexto es distinto al nuestro, pero el hallazgo es valioso: la calidad de la información tiene efectos observables sobre la confianza de quienes usan los resultados, así que no es un asunto puramente técnico. Piedrahita Mazo y Montoya Quintero (2022), por su parte, revisaron la literatura sobre evaluación de la calidad de la información en las organizaciones y concluyen que gestionarla bien depende de medirla con indicadores específicos para cada proceso. Para nosotros eso se traduce en una exigencia práctica: antes de medir el efecto de los duplicados hay que tener muy bien definidas las métricas con las que se va a medir.
+
+El antecedente más cercano a nuestro objeto de estudio es el de Corrales et al. (2016). En una revisión sistemática sobre los problemas de calidad que afectan las tareas de descubrimiento de conocimiento, los autores clasifican varias dimensiones (heterogeneidad, ruido, inconsistencia, datos faltantes y redundancia) y definen la redundancia precisamente como la presencia de instancias duplicadas y de atributos derivados que repiten la misma información. Además ilustran estos problemas con un conjunto de datos agrícola sobre la roya del café. Es el único trabajo de la revisión que trata la duplicación como una dimensión de calidad con consecuencias sobre el análisis, y por eso es un punto de partida obligado. Eso sí, su aporte es de clasificación y descripción: no llega a medir experimentalmente cuánto cambia un resultado cuando hay duplicados.
+
+\section{Qué pasa con los resultados cuando se limpian los datos}
+
+Un segundo grupo de antecedentes documenta cómo una intervención concreta de limpieza o preprocesamiento cambia de forma medible los resultados de un análisis. Ninguno de estos trabajos se ocupa de los duplicados, pero todos siguen la misma lógica que queremos aplicar: tomar un mismo conjunto de datos, modificar una sola condición de calidad y comparar lo que se obtiene antes y después.
+
+Romero Duque et al. (2023) propusieron una ruta para construir bases de datos robustas frente a datos faltantes y la aplicaron a 1\,253\,280 registros financieros de 2\,238 empresas de la localidad de Chapinero, en Bogotá, entre 2012 y 2018. Compararon tres técnicas de imputación y concluyeron que la imputación simple era la más adecuada por la naturaleza longitudinal de los datos. El problema que estudian es distinto al nuestro, pero la manera en que contrastan diferentes estados de una misma base de datos es exactamente la lógica comparativa que queremos trasladar a los duplicados exactos.
+
+En la misma dirección, Gómez et al. (2025) evaluaron el algoritmo \emph{Known Sub-Sequence Algorithm} (KSSA) como herramienta para escoger el mejor método de imputación en series de tiempo de pesca de atún en el océano Pacífico. Simularon datos faltantes y compararon cuantitativamente el desempeño de los métodos según propiedades de la serie como la longitud, la estacionalidad, la tendencia y la autocorrelación. Es un buen ejemplo de cómo comparar con rigor resultados obtenidos bajo distintas condiciones de calidad, aunque aplicado a otro tipo de problema.
+
+Amézquita Tovar y Eslava Blanco (2022) usaron aprendizaje supervisado para atacar dos dimensiones de calidad en bases de datos gubernamentales: la completitud, imputando valores faltantes de peso y talla en registros de salud, y la coherencia, detectando registros que violaban reglas de negocio en una base de bienestar infantil. Lo interesante para nosotros es que cuantifican cuántos datos nulos e incoherentes lograron reducir. Gil González et al. (2014) analizaron cómo distintas técnicas de procesamiento y normalización de los datos de entrada alteran la precisión de un localizador de fallas en sistemas de distribución eléctrica; su conclusión, que las características de los datos de entrada pueden cambiar de manera sustancial el desempeño del método, es el mismo principio que queremos comprobar para los duplicados.
+
+Contreras Contreras et al. (2022) plantearon una metodología para desarrollar y evaluar técnicas de agrupamiento con aprendizaje automático, con especial atención al tratamiento previo de los datos y a la evaluación cuantitativa de los resultados. Nos sirve como referente para organizar experimentos en los que varias versiones de un mismo conjunto de datos pasan por un procedimiento analítico idéntico. Por último, en el campo de la salud, Yepes-Delgado et al. (2023) describieron las estrategias de aseguramiento de calidad de un estudio de cohorte sobre enfermedad renal crónica en Colombia (doble digitación, protocolos estandarizados, capacitación y pruebas de concordancia entre evaluadores). Reportan una disminución progresiva de los errores de captura y valores de Kappa entre 0,73 y 0,96 en las variables críticas, lo que muestra de forma empírica que el control sistemático de la calidad se refleja en la confiabilidad de los análisis posteriores.
+
+\seccioncorta{Desempeño analítico y condiciones de los datos}{Comparar el desempeño analítico bajo distintas condiciones de los datos}
+
+Un tercer grupo de trabajos no trata directamente problemas de calidad, pero ofrece buenos ejemplos de cómo comparar modelos y análisis con métricas cuantitativas, algo que necesitamos para diseñar nuestro experimento.
+
+Pérez-Gutiérrez (2020) comparó varias técnicas de minería de datos aplicadas a información académica para identificar indicios de deserción estudiantil. Su esquema, en el que distintos métodos se evalúan con las mismas métricas sobre el mismo conjunto de datos, se puede trasladar casi sin cambios a nuestra comparación entre la versión limpia y las versiones con duplicados. Contreras Bravo et al. (2022) construyeron un modelo de predicción del rendimiento académico universitario con varios algoritmos supervisados (k vecinos más cercanos, árboles de decisión, máquinas de vectores de soporte, Naive Bayes y análisis discriminante lineal) sobre un conjunto con más de trescientas variables. Su metodología describe con detalle la limpieza previa (eliminación de observaciones no deseadas, corrección de errores estructurales y tratamiento de faltantes) y advierte sobre su efecto en la fiabilidad de los resultados, por lo que es uno de los antecedentes metodológicos más cercanos a nuestro diseño.
+
+Quevedo Piratova et al. (2024) compararon árboles de decisión, regresión lineal y bosques aleatorios para predecir datos dependientes consecutivos con Python y Scikit-learn. Encontraron que un algoritmo más complejo no garantiza por sí solo mejor precisión y que la configuración del modelo y de los datos de entrada pesa tanto como la elección del algoritmo. Ese hallazgo refuerza nuestra decisión de aislar una sola condición de los datos (los duplicados) en lugar de atribuir las diferencias al método de análisis. Finalmente, Hernández-Ponce et al. (2024), con un modelo de aprendizaje profundo semisupervisado para clasificar limones defectuosos, y Ramírez-Noriega et al. (2026), con un modelo que predice la distracción de estudiantes universitarios por el uso de redes sociales a partir de más de mil encuestas, muestran cómo reportar con rigor el desempeño de un análisis mediante métricas cuantitativas. No abordan la calidad de datos, pero nos ayudan a definir qué métricas reportar.
+
+\seccioncorta{Los duplicados como problema de calidad}{Los duplicados como problema de calidad: lo que se sabe y lo que falta}
+
+Este es el eje que más nos importa y también el más escaso en la literatura regional. Como ya se dijo, Corrales et al. (2016) reconocen la redundancia como una dimensión de calidad, pero no miden su efecto. Candal Vicente (2013), desde un modelo de éxito para sistemas \emph{data warehouse}, advierte que los registros duplicados afectan operaciones de agregación, conteo y generación de indicadores. Tampoco lo comprueba empíricamente, aunque su argumento explica con claridad por qué un duplicado en una infraestructura analítica no es un detalle menor.
+
+Un hallazgo curioso de la revisión es que la evidencia más concreta sobre el tratamiento de duplicados exactos no viene de la ingeniería de datos, sino de revisiones de literatura en otras áreas. Ramos Frometa y Gómez Luna (2024), en su revisión sobre el cultivo de la microalga \emph{Porphyridium cruentum}, eliminaron cerca de 163 registros duplicados de 1\,014 documentos iniciales, alrededor del 16\,\% del corpus. Da Silva Pereira Rodrigues (2023), en una revisión sobre las propiedades medicinales de \emph{Anacardium occidentale}, usó Mendeley Desktop y Rayyan QCRI para depurar los duplicados que resultan de buscar en varias bases de datos a la vez. Ninguno de los dos analiza qué habría pasado sin esa limpieza, pero ambos muestran que la duplicación exacta es frecuente, cuantificable y que su eliminación se volvió un paso rutinario que casi nadie cuestiona.
+
+Hernández-Leal et al. (2017) y Rodríguez Rodríguez (2013) aportan un contexto más general. El primero es una revisión cienciométrica sobre las tecnologías de captura, procesamiento, análisis y visualización de grandes volúmenes de datos; el segundo describe UDMiner, una herramienta de minería de datos con un módulo de preprocesamiento previo a la asociación, la clasificación y el agrupamiento. Su relación con los duplicados es tangencial, pero sitúan el problema en el mundo de los grandes volúmenes, donde un duplicado es un riesgo latente que pocas veces se mide.
+
+Fuera de la literatura regional el panorama es distinto, y conviene decirlo con claridad. La detección de registros duplicados es un campo maduro desde hace años, como lo muestra la revisión de Elmagarmid et al. (2007), aunque centrada sobre todo en duplicados aproximados. Más cerca de nuestra pregunta, el estudio CleanML de Li et al. (2021) evaluó el efecto de limpiar cinco tipos de errores reales, entre ellos los duplicados, sobre siete modelos de clasificación y catorce conjuntos de datos, con pruebas de hipótesis y control de falsos descubrimientos. Encontró que limpiar duplicados e inconsistencias suele tener un impacto bajo en la exactitud de los clasificadores, a diferencia de corregir faltantes o etiquetas erróneas. Mohammed et al. (2025) contaminaron de forma controlada conjuntos de datos tabulares en seis dimensiones de calidad y midieron el efecto sobre diecinueve algoritmos de clasificación, regresión y agrupamiento. Para la dimensión de unicidad (duplicados) el efecto fue pequeño en casi todos los casos; la excepción más clara fue una red neuronal entrenada con un conjunto de apenas mil registros, cuyo desempeño ya caía con un 5\,\% de duplicados.
+
+Estos dos trabajos cambian la forma de plantear nuestra pregunta. Ya no podemos decir que nadie ha medido el efecto de los duplicados, porque sí se ha hecho, y el resultado es incómodo: sobre la exactitud global de un clasificador, el efecto suele ser menor de lo que la intuición sugiere. Pero ambos estudios miden una sola cosa, el desempeño agregado de modelos sobre conjuntos de referencia, y dejan preguntas abiertas que son justamente las nuestras.
+
+\section{Síntesis y vacío en la literatura}
+
+La revisión deja tres conclusiones. Primero, la calidad de datos se puede evaluar de forma objetiva con dimensiones e indicadores, y esa evaluación tiene consecuencias reales sobre la confiabilidad de los análisis. Segundo, hay un cuerpo amplio de trabajos, centrados sobre todo en datos faltantes, coherencia y normalización, que demuestran que intervenir una dimensión de calidad cambia de forma medible los resultados, y que en conjunto nos dan un modelo metodológico sólido para comparar distintos estados de un mismo conjunto de datos. Tercero, la duplicación está reconocida como dimensión de calidad y se elimina de forma rutinaria, pero cuando se ha medido su efecto (Li et al., 2021; Mohammed et al., 2025) se ha hecho sobre la exactitud de clasificadores entrenados con conjuntos de referencia, con resultados que sugieren un impacto moderado o bajo.
+
+A partir de ahí identificamos el vacío concreto que queremos cubrir:
+
+\begin{itemize}
+ \item Ningún estudio revisado mide el efecto de los duplicados exactos sobre indicadores descriptivos (conteos, promedios, medianas, desviaciones, proporciones y rankings) ni sobre estadísticos inferenciales como la prueba chi-cuadrado o la prueba $t$, que son la base de muchos informes y decisiones y que, a diferencia de un clasificador, se alteran de forma directa cuando crece el número de filas.
+ \item Ningún estudio replica un análisis ya publicado, con su metodología y sus datos reales, para ver si los duplicados cambian las conclusiones de ese estudio (qué efectos resultan significativos, qué tan grandes parecen, qué grupos quedan arriba), y no solo una métrica de desempeño.
+ \item La literatura no distingue entre duplicación uniforme (cualquier registro puede repetirse) y duplicación concentrada en un grupo o en una parte de la distribución, que es lo que ocurre, por ejemplo, cuando una carga se repite solo para una fuente. Esa distinción es clave, porque la primera infla conteos y significancias mientras que la segunda además puede sesgar proporciones, promedios y dispersión.
+ \item En la literatura colombiana y latinoamericana revisada no encontramos ningún trabajo que mida experimentalmente el efecto de los duplicados exactos sobre resultados analíticos.
+\end{itemize}
+
+Para cubrir ese vacío tomaremos dos estudios publicados como anclas. El principal es Many Labs 1 (Klein et al., 2014), un proyecto que replicó trece efectos clásicos de la psicología en 36 muestras con un mismo protocolo, para un total de 6\,344 participantes. Lo elegimos por cuatro razones: está revisado por pares y es ampliamente citado; sus datos son públicos con licencia CC0; cada fila corresponde a un participante con un identificador único, de modo que un duplicado exacto tiene un significado inequívoco, y sus resultados centrales, basados en pruebas chi-cuadrado y $t$, se pueden reproducir con exactitud a partir de esos datos (por ejemplo, el chi-cuadrado de 516,4 del efecto de encuadre de ganancia y pérdida). Tiene además una coincidencia que nos parece valiosa: es en sí mismo un estudio sobre replicabilidad, y nosotros lo usamos para medir qué tan frágiles son sus resultados ante un error de datos.
+
+El segundo es el conjunto de datos de Delahoz-Dominguez et al. (2020), que cruza los resultados de las pruebas Saber~11 y Saber~Pro del ICFES para 12\,411 estudiantes de ingeniería en Colombia, junto con variables socioeconómicas como el estrato y el tipo de colegio. Es un artículo de datos revisado por pares, con licencia CC BY 4.0, cuyos resultados son descriptivos (promedios, desviaciones y porcentajes por programa) y también se reproducen con exactitud. Complementa al primero en dos sentidos: cubre los indicadores descriptivos que Many Labs no reporta y aporta datos colombianos, lo que acerca el problema al contexto en el que trabajamos.
+
+\begin{figure*}[!tp]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=3pt, align=center, text width=5cm, minimum height=1.2cm, font=\small, execute at begin node={\hyphenpenalty=10000\relax}, inner sep=4pt},
+  big/.style={draw, thick, rounded corners=4pt, align=center, text width=6.2cm, font=\small, execute at begin node={\hyphenpenalty=10000\relax}, inner sep=6pt, fill=gray!10},
+  >={Stealth[length=2.5mm]}]
+\node[box] (a) at (0,0) {\textbf{Eje (a)}\\ dimensiones y métricas de calidad};
+\node[box, below=0.35cm of a] (b) {\textbf{Ejes (b) y (c)}\\ comparación antes y después con el mismo análisis};
+\node[box, below=0.35cm of b] (d) {\textbf{Eje (d)}\\ duplicados reconocidos y eliminados de forma rutinaria};
+\node[box, below=0.35cm of d] (i) {\textbf{Li et al. (2021) y Mohammed et al. (2025)}\\ efecto bajo sobre la exactitud de clasificadores};
+\coordinate (m) at ($(b.east)!0.5!(d.east)$);
+\node[big, anchor=west] (p) at ($(m)+(1.8,0)$) {\textbf{Diseño del proyecto}\\[3pt]
+  réplica exacta de dos estudios publicados\\ $+$\\ inyección controlada de duplicados exactos (uniforme y concentrada)\\ $+$\\ comparación de indicadores descriptivos, pruebas estadísticas y tamaños de efecto};
+\node[box, text width=6.2cm, above=0.8cm of p] (an) {\textbf{Anclas}: Many Labs 1 (Klein et al., 2014) y Saber~11/Saber~Pro (Delahoz-Dominguez et al., 2020)};
+\foreach \n in {a,b,d,i} \draw[->] (\n.east) -- (p.west);
+\draw[->] (an) -- (p);
+\end{tikzpicture}
+\caption{Aporte de cada eje de la revisión al diseño de la investigación.}
+\label{fig:aporte}
+\end{figure*}
+
+El diseño, resumido en la Figura~\ref{fig:aporte}, consiste en replicar el análisis de cada estudio sobre sus datos originales como línea base, inyectar duplicados exactos en proporciones conocidas (1\,\%, 5\,\%, 10\,\% y 20\,\%) y bajo distintos esquemas de distribución, repetir exactamente el mismo análisis y comparar. Así se aísla el efecto de los duplicados de cualquier otra fuente de variación y se pueden medir los cambios en los indicadores descriptivos, en la significancia estadística, en los tamaños de efecto y en las conclusiones que cada estudio presenta como hallazgos.
+%==================== Fin de PRB3EstadoArte.tex ====================
+%==================== Inicio de PRB4Marco.tex ====================
+\chapter{Marco teórico}\label{cap:marco}
+
+\section{Introducción}
+
+Este capítulo reúne los conceptos con los que se plantea y se mide el problema. Primero se define la calidad de datos y el lugar que ocupan los duplicados dentro de ella. Luego se formaliza qué le hace un duplicado exacto a un indicador descriptivo y a una prueba estadística, que es la base de las hipótesis del proyecto. Por último se presentan las métricas con las que se comparan los resultados y la distinción entre reproducibilidad y replicabilidad, que justifica el uso de estudios publicados como línea base.
+
+\section{Calidad de datos}
+
+La calidad de datos se entiende como la aptitud de los datos para el uso que se les quiere dar. Wang y Strong (1996) mostraron, a partir de las opiniones de quienes consumen los datos, que la calidad no se reduce a la exactitud: es un concepto con varias dimensiones, que ellos agruparon en calidad intrínseca, contextual, de representación y de accesibilidad. Batini et al. (2009), en su revisión de metodologías de evaluación y mejora de la calidad de datos, identifican la exactitud, la completitud, la consistencia y la oportunidad como las dimensiones más usadas, y muestran que cada una exige sus propias métricas.
+
+Dentro de ese marco, la duplicación de registros se trata como un problema de redundancia o de unicidad: un mismo objeto del mundo real queda representado más de una vez. Corrales et al. (2016) la incluyen explícitamente entre los problemas de calidad que afectan las tareas de descubrimiento de conocimiento. Lo que interesa en este proyecto no es la dimensión en sí, sino su consecuencia: qué tan precisos siguen siendo los resultados de un análisis cuando esa dimensión se degrada.
+
+\section{Registros duplicados y deduplicación}
+
+\subsection{Duplicados exactos y aproximados}
+
+Un \textbf{duplicado exacto} es una fila que coincide con otra en todos sus atributos. Un \textbf{duplicado aproximado} representa la misma entidad, pero con diferencias en algunos campos, como errores de digitación, abreviaturas o formatos distintos. La detección de duplicados aproximados es un campo maduro que se apoya en medidas de similitud, reglas de coincidencia y técnicas de enlace de registros (Elmagarmid et al., 2007; Christen, 2012). Los duplicados exactos, en cambio, se identifican sin ambigüedad, y por eso permiten estudiar el efecto de la duplicación de forma controlada, sin mezclarlo con los errores propios de un algoritmo de detección.
+
+Para que un duplicado exacto sea inequívoco, cada fila debe corresponder a una unidad distinta. Si los datos traen un identificador único por unidad, como ocurre en los dos estudios ancla, dos filas idénticas, incluido ese identificador, solo pueden ser la misma unidad registrada dos veces. Si no lo traen, dos unidades distintas podrían coincidir por azar en todos sus valores y la repetición no sería un error.
+
+\subsection{Duplicados en una base de datos relacional}
+
+En el modelo relacional teórico una relación es un conjunto y no admite filas repetidas, pero las tablas de SQL se comportan como multiconjuntos: aceptan filas idénticas y las cuentan tantas veces como aparecen. Por eso un duplicado entra sin error en una tabla de PostgreSQL y participa en todas las agregaciones (\texttt{COUNT}, \texttt{SUM}, \texttt{AVG}). La deduplicación exacta consiste en volver a un conjunto, por ejemplo con \texttt{SELECT DISTINCT}, que conserva una sola copia de cada fila. Si la base original no tenía duplicados, la versión deduplicada debe ser idéntica a ella, y esa es la propiedad que permite verificar el procedimiento experimental.
+
+\section{Efecto de los duplicados sobre los indicadores descriptivos}
+
+Sea una base con $n$ registros y una variable $x$. Duplicar registros equivale a darle a cada registro $i$ un peso $w_i$ igual al número de veces que aparece. En la base original $w_i = 1$ para todos, y en una versión con $k$ duplicados se cumple $\sum_i w_i = n + k$. El promedio pasa a ser un promedio ponderado:
+\begin{equation}
+\bar{x}' = \frac{\sum_{i=1}^{n} w_i x_i}{\sum_{i=1}^{n} w_i}.
+\end{equation}
+
+Si los $k$ registros que se duplican se escogen al azar entre todos, el valor esperado de $\bar{x}'$ es el mismo $\bar{x}$ de la base, y solo hay una pequeña variación aleatoria. Si se escogen dentro de un subconjunto $S$ cuyo promedio es $\bar{x}_S$, el nuevo promedio es
+\begin{equation}
+\bar{x}' = \frac{n\,\bar{x} + k\,\bar{x}_S}{n + k},
+\end{equation}
+y por lo tanto
+\begin{equation}
+\bar{x}' - \bar{x} = \frac{k}{n + k}\,(\bar{x}_S - \bar{x}).
+\end{equation}
+Es decir, el sesgo crece con la proporción de duplicados y con qué tan distinto es el subconjunto del total. La misma lógica vale para una proporción $p$, que no es más que el promedio de una variable que vale 1 o 0: si se duplican $k$ registros que cumplen la condición, la proporción pasa de $p$ a $(np + k)/(n + k)$. La mediana y los percentiles se desplazan hacia la región duplicada, y la desviación estándar crece cuando los duplicados caen lejos del centro de la distribución, por ejemplo en las colas. Un ranking de grupos cambia si el sesgo es suficiente para que dos grupos cercanos intercambien su posición.
+
+Los conteos (\texttt{COUNT}) y las sumas (\texttt{SUM}) son el caso extremo: crecen siempre, porque cada duplicado se suma completo. Eso explica por qué la literatura reconoce el efecto de los duplicados sobre la agregación y la generación de indicadores (Candal Vicente, 2013).
+
+\section{Inferencia estadística y tamaño de efecto}
+
+\subsection{Prueba chi-cuadrado de independencia}
+
+La prueba chi-cuadrado de Pearson (1900) evalúa si dos variables categóricas están asociadas. Compara las frecuencias observadas $O_{ij}$ de una tabla de contingencia con las que se esperarían si no hubiera asociación, $E_{ij}$:
+\begin{equation}
+\chi^2 = \sum_{i}\sum_{j} \frac{(O_{ij} - E_{ij})^2}{E_{ij}}.
+\end{equation}
+Si todas las frecuencias se multiplican por un mismo factor $c$, también se multiplican las esperadas y el estadístico pasa a ser $c\,\chi^2$. Una duplicación uniforme del 20\,\% se comporta, en promedio, como $c = 1{,}2$: la prueba parece más contundente aunque la relación entre las variables sea la misma. La fuerza de la asociación se mide con la \textbf{V de Cramér}, que divide el estadístico entre el número de observaciones:
+\begin{equation}
+V = \sqrt{\frac{\chi^2}{N\,(\min(r, s) - 1)}},
+\end{equation}
+donde $N$ es el total de observaciones y $r$ y $s$ son el número de filas y columnas de la tabla. Como $\chi^2$ y $N$ crecen en la misma proporción, $V$ no cambia con la duplicación uniforme. Si la duplicación se concentra en una sola celda, en cambio, las proporciones de la tabla cambian y $V$ puede subir o bajar.
+
+\subsection{Prueba $t$ para dos grupos}
+
+La prueba $t$ compara los promedios de dos grupos:
+\begin{equation}
+t = \frac{\bar{x}_1 - \bar{x}_2}{s_p\sqrt{\frac{1}{n_1} + \frac{1}{n_2}}},
+\end{equation}
+\begin{equation}
+d = \frac{\bar{x}_1 - \bar{x}_2}{s_p},
+\end{equation}
+donde $s_p$ es la desviación estándar combinada y $d$ es la $d$ de Cohen, el tamaño de efecto asociado (Cohen, 1988). Si los dos grupos crecen en un factor $c$ sin cambiar sus promedios ni sus desviaciones, $t$ crece aproximadamente en $\sqrt{c}$, mientras que $d$ se mantiene.
+
+\subsection{Valor $p$, independencia y tamaño de efecto}
+
+El valor $p$ indica qué tan compatibles son los datos con la hipótesis de que no hay efecto, pero no mide su tamaño ni su importancia (Wasserstein y Lazar, 2016). Con muestras grandes, efectos muy pequeños pueden ser significativos, y por eso se recomienda reportar siempre un tamaño de efecto junto con la prueba (Sullivan y Feinn, 2012). Los duplicados agravan el problema por una razón adicional: las pruebas chi-cuadrado y $t$ suponen que las observaciones son independientes, y una fila duplicada es, por definición, una observación que depende por completo de otra. El resultado es un tamaño de muestra aparente mayor que el real y un valor $p$ menor del que corresponde. Comparar el estadístico de prueba con el tamaño de efecto permite separar ese aumento artificial de la certeza de un cambio real en la fuerza del efecto.
+
+\section{Métricas de comparación}
+
+Para cada resultado $I$ calculado en una versión con duplicados ($\hat{I}_k$) se compara contra su valor en la línea base ($I_0$) con tres tipos de métrica:
+
+\begin{itemize}
+ \item \textbf{Error relativo porcentual:} $ER = |\hat{I}_k - I_0| / |I_0| \times 100$, para conteos, promedios, medianas y desviaciones.
+ \item \textbf{Diferencia absoluta:} $\Delta = \hat{I}_k - I_0$, en puntos porcentuales para las proporciones y en las unidades propias de cada medida en los demás casos. Conserva el signo, que indica hacia dónde se sesga el resultado.
+ \item \textbf{Coeficiente tau de Kendall} (Kendall, 1938), para comparar dos rankings de $m$ elementos:
+ \begin{equation}
+ \tau = \frac{C - D}{m(m-1)/2},
+ \end{equation}
+ donde $C$ y $D$ son el número de pares de elementos que quedan en el mismo orden y en orden invertido. Vale 1 si los rankings son idénticos y $-1$ si uno es el inverso del otro.
+\end{itemize}
+
+En el nivel inferencial se agregan la razón entre el estadístico de cada versión y el de la base ($\chi^2_k/\chi^2_0$ o $t_k/t_0$), el valor $p$ y los tamaños de efecto $V$ y $d$.
+
+\section{Reproducibilidad y replicabilidad}
+
+Conviene distinguir dos ideas que a menudo se confunden. Un resultado es \textbf{reproducible} cuando, con los mismos datos y el mismo análisis, se obtiene el mismo valor. Es \textbf{replicable} cuando un estudio nuevo, con datos nuevos, llega a la misma conclusión. La preocupación por la replicabilidad creció en la última década a partir de proyectos como el de la Open Science Collaboration (2015), que repitió cien estudios de psicología y solo encontró resultados significativos en una fracción de las réplicas, y del propio Many Labs~1 (Klein et al., 2014), que repitió trece efectos en 36 muestras con un protocolo común.
+
+Este proyecto se apoya en la reproducibilidad. Antes de inyectar cualquier duplicado se exige que el análisis, aplicado sobre los datos públicos de cada estudio, reproduzca con exactitud los valores publicados. Esa línea base garantiza que cualquier diferencia posterior se deba a los duplicados y no a una réplica imperfecta del análisis. Además, al usar Many Labs~1, el proyecto añade una pregunta que la discusión sobre replicabilidad no suele plantear: qué tan estables son los resultados de un estudio ante un error común en sus propios datos.
+%==================== Fin de PRB4Marco.tex ====================
+
+%Parte II: la propuesta
+ \part{Propuesta de investigación}
+%==================== Inicio de PRB2Objetivos.tex ====================
+\chapter{Objetivos}
+
+\section{Objetivo general y objetivos específicos}
+
+\subsection{Objetivo general}
+
+Evaluar el efecto de los duplicados exactos sobre la precisión de resultados analíticos descriptivos e inferenciales, replicando el análisis de dos estudios publicados, Many Labs~1 (Klein et al., 2014) y el conjunto de datos Saber~11/Saber~Pro de Delahoz-Dominguez et al. (2020), y comparando los resultados de su línea base con versiones de los mismos datos a las que se les inyectan duplicados de forma controlada, usando PostgreSQL y Python.
+
+\subsection{Objetivos específicos}
+
+\begin{enumerate}
+ \item Identificar, a partir de la revisión documental, los conceptos de calidad de datos y de duplicación de registros que sustentan el estudio, y los trabajos previos que han medido el efecto de los duplicados sobre resultados analíticos.
+ \item Construir una línea base para cada estudio a partir de sus datos públicos, verificando la ausencia de duplicados exactos y reproduciendo los resultados que reportan los autores.
+ \item Generar de forma reproducible versiones de cada conjunto de datos con 1\,\%, 5\,\%, 10\,\% y 20\,\% de duplicados exactos, bajo tres tipos de esquema: uniforme, concentrado en un grupo natural de los datos y concentrado según el valor del resultado que se mide.
+ \item Calcular sobre todas las versiones de Saber~11/Saber~Pro, con consultas idénticas en PostgreSQL, un conjunto fijo de indicadores descriptivos: conteos, promedios, medianas, desviaciones estándar, proporciones, el ranking de programas académicos y una correlación.
+ \item Replicar sobre todas las versiones de Many Labs~1 las pruebas chi-cuadrado y $t$ de los efectos seleccionados, y medir los cambios en el estadístico de prueba, el valor $p$ y los tamaños de efecto (V de Cramér y $d$ de Cohen).
+ \item Aplicar la deduplicación exacta en PostgreSQL y comprobar que todos los resultados vuelven a los valores de la línea base.
+ \item Determinar, mediante métricas objetivas, qué resultados son más sensibles a los duplicados y en qué condiciones de nivel y distribución la distorsión se vuelve relevante.
+\end{enumerate}
+%==================== Fin de PRB2Objetivos.tex ====================
+%==================== Inicio de PRB1Justificacion.tex ====================
+\chapter{Justificación}
+
+Cualquier informe, indicador o análisis estadístico depende de los datos con los que se construye. Una base de datos puede tener muchos problemas de calidad y uno de los más comunes es la duplicación de registros, que aparece cuando una carga se ejecuta dos veces, cuando se integran fuentes que comparten información o cuando una migración no controla la unicidad. Lo delicado de los duplicados es que no rompen nada: la consulta corre, la prueba estadística arroja un valor $p$ y el tablero muestra cifras. El error pasa desapercibido y se refleja en los resultados.
+
+Los duplicados exactos, es decir, filas idénticas en todas sus columnas, son el caso más simple de este problema y por eso se pueden estudiar de forma controlada. La literatura los reconoce como una dimensión de la calidad de datos (Corrales et al., 2016) y advierte que afectan operaciones de conteo, agregación y generación de indicadores (Candal Vicente, 2013). Sin embargo, cuando se ha medido su efecto, se ha hecho casi siempre sobre la exactitud de clasificadores entrenados con conjuntos de referencia, y el resultado ha sido que ese efecto suele ser bajo (Li et al., 2021; Mohammed et al., 2025). Eso deja por fuera justamente los números que más se usan para decidir: un promedio, una proporción por grupo, un ranking, un valor $p$ o un tamaño de efecto. Un duplicado casi no mueve la exactitud de un modelo, pero puede cambiar qué grupo aparece primero en un informe, hacer que una prueba parezca más contundente de lo que es o hacer que un efecto parezca más pequeño.
+
+Este proyecto busca llenar ese vacío con un diseño concreto. En lugar de trabajar con datos artificiales, toma dos estudios ya publicados, con datos públicos y resultados que se pueden reproducir con exactitud, y mide cuánto cambian esos resultados cuando se les agregan duplicados en proporciones conocidas. El estudio ancla es Many Labs~1 (Klein et al., 2014), un proyecto que replicó trece efectos clásicos de la psicología en 36 muestras y 6\,344 participantes, cuyos resultados centrales son pruebas chi-cuadrado y $t$. El segundo caso es el conjunto de datos de Delahoz-Dominguez et al. (2020), con los resultados de las pruebas Saber~11 y Saber~Pro de 12\,411 estudiantes de ingeniería en Colombia, cuyos resultados son descriptivos. Los escogimos porque en ambos cada fila es una persona con un identificador único, de modo que un duplicado exacto tiene un significado claro, y porque juntos permiten evaluar los dos tipos de resultados que más se usan para decidir: los inferenciales y los descriptivos. El segundo caso, además, acerca el problema al contexto colombiano.
+
+También diferenciamos entre una duplicación uniforme y una concentrada, algo que la literatura revisada no distingue y que, según una exploración preliminar que hicimos al verificar los datos, cambia por completo la magnitud del efecto. En Saber, agregar un 10\,\% de duplicados al azar movió el puntaje promedio apenas 0,01 puntos, mientras que la misma cantidad concentrada en el 10\,\% de estudiantes con menor puntaje lo redujo 3,6 puntos y aumentó la desviación estándar un 8\,\%. En Many Labs, duplicar al azar infló el chi-cuadrado en la misma proporción que el número de filas sin cambiar la fuerza del efecto, pero duplicar una sola combinación de grupo y respuesta redujo la V de Cramér de 0,287 a 0,174 con el mismo 10\,\%.
+
+Desde la Ingeniería de Sistemas, el proyecto conecta la calidad de datos con el trabajo diario en bases de datos e ingeniería de datos. PostgreSQL se usará para almacenar las versiones de cada conjunto de datos, inyectar y eliminar duplicados y ejecutar las consultas analíticas; Python, para preparar los datos, orquestar el experimento y calcular las pruebas estadísticas. Los resultados darán criterios medibles para decidir cuándo la deduplicación es indispensable y cuándo su omisión tiene un efecto menor, algo útil para quien diseña procesos de carga, integración y limpieza en una organización.
+%==================== Fin de PRB1Justificacion.tex ====================
+%==================== Inicio de PRB6Alcance.tex ====================
+\chapter{Alcance}
+
+El proyecto estudia de forma experimental el efecto de los duplicados exactos sobre los resultados analíticos de dos estudios publicados. En los dos casos se sigue el mismo protocolo (Figura~\ref{fig:protocolo}): se replica el análisis publicado sobre los datos originales, se inyectan duplicados en proporciones y con distribuciones conocidas, se repite exactamente el mismo análisis y se compara con la línea base y con las versiones deduplicadas.
+
+\begin{figure*}[!tp]
+\centering
+\begin{tikzpicture}[
+  st/.style={draw, rounded corners=3pt, align=center, text width=2.8cm, minimum height=1.2cm, font=\small, execute at begin node={\hyphenpenalty=10000\relax}},
+  an/.style={st, fill=gray!12, text width=3.6cm, minimum height=1.0cm},
+  lab/.style={font=\scriptsize, align=center},
+  >={Stealth[length=2.5mm]}]
+\node[an] (ml) at (-0.2,0.75) {\textbf{Many Labs~1}\\ pruebas $\chi^2$ y $t$};
+\node[an] (sb) at (-0.2,-0.75) {\textbf{Saber~11/Saber~Pro}\\ indicadores descriptivos};
+\node[st] (lb) at (3.9,0) {\textbf{Línea base}\\ réplica exacta de lo publicado};
+\node[st] (in) at (7.5,0) {\textbf{Inyección}\\ 4 niveles $\times$ 3 esquemas $\times$ 10 semillas};
+\node[st] (al) at (11.1,0) {\textbf{Mismo análisis}\\ sobre cada versión};
+\node[st] (de) at (11.1,-3.0) {\textbf{Deduplicación}\\ \texttt{SELECT DISTINCT}};
+\node[st] (co) at (6.0,-3.0) {\textbf{Comparación}\\ con la línea base};
+\node[st, text width=6.2cm, minimum height=0.9cm, font=\footnotesize] (me) at (6.0,-4.9) {Métricas: error relativo, puntos porcentuales, $\tau$ de Kendall, $\chi^2/\chi^2_0$, valor $p$, V de Cramér y $d$ de Cohen};
+\draw[->] (ml.east) -- (lb.west); \draw[->] (sb.east) -- (lb.west);
+\draw[->] (lb) -- (in); \draw[->] (in) -- (al); \draw[->] (al) -- (de);
+\draw[->] (al.south west) -- node[lab, sloped, above=1pt] {resultados con duplicados} (co.north east);
+\draw[->] (de) -- node[lab, below=2pt] {¿vuelve a\\ la base?} (co);
+\draw[->, dashed] (lb.south) |- node[lab, pos=0.4, left] {valores de\\ referencia} (co.west);
+\draw[->] (co) -- (me);
+\end{tikzpicture}
+\caption{Protocolo experimental que se aplica a cada uno de los dos estudios.}
+\label{fig:protocolo}
+\end{figure*}
+
+\section{Datos}
+
+\textbf{Many Labs~1.} Se usará el archivo depurado que publicaron Klein et al. (2014) en el Open Science Framework (\url{https://osf.io/pqf9r}), con licencia CC0 y sin registro previo. Tiene 6\,344 filas y 382 columnas; cada fila es un participante con un identificador de sesión único, y las 36 muestras van desde 79 hasta 1\,329 participantes. Al revisar el archivo comprobamos que no tiene ninguna fila repetida. Se trabajará con los cinco efectos cuyos resultados publicados se reproducen con exactitud a partir de esos datos: tres pruebas chi-cuadrado (encuadre de ganancia y pérdida, permitir frente a prohibir y escalas de categorías bajas frente a altas) y dos pruebas $t$ (dos de las preguntas de anclaje). Por ejemplo, el chi-cuadrado del efecto de encuadre es 516,4 con 6\,271 participantes, el mismo valor que reporta el artículo.
+
+\textbf{Saber~11/Saber~Pro.} Se usará el conjunto de datos de Delahoz-Dominguez et al. (2020), publicado en Mendeley Data (\url{https://data.mendeley.com/datasets/83tcx8psxv}) con licencia CC BY 4.0. Es un archivo de Excel con 12\,411 filas y 45 columnas, una de ellas vacía; cada fila es un estudiante con un código único, y tampoco tiene filas repetidas. Contiene los puntajes de Saber~11 y Saber~Pro, el programa académico y variables socioeconómicas como el estrato y el tipo de colegio. Sus resultados publicados (promedios, desviaciones estándar y porcentajes por programa) se reproducen con exactitud.
+
+Como ninguno de los dos archivos tiene duplicados y ambos traen un identificador único por persona, en este proyecto un duplicado exacto es una fila idéntica a otra en todas sus columnas, incluido ese identificador: la misma persona contada dos veces.
+
+\section{Diseño experimental}
+
+\begin{itemize}
+ \item \textbf{Niveles de duplicación:} 0\,\% (línea base), 1\,\%, 5\,\%, 10\,\% y 20\,\% del tamaño de cada base.
+ \item \textbf{Esquemas de inyección:} tres tipos, que se ilustran en la Figura~\ref{fig:esquemas} y se concretan para cada estudio en la Tabla~\ref{tab:esquemas}.
+ \item \textbf{Repeticiones:} 10 semillas por combinación de nivel y esquema, con el fin de separar el efecto de los duplicados de la variación aleatoria.
+\end{itemize}
+
+\begin{figure*}[!tp]
+\centering
+\begin{tikzpicture}
+\pgfplotsset{esq/.style={width=0.47\textwidth, height=3.8cm, domain=-3.5:3.5, samples=120, axis lines=left, ytick=\empty, xtick=\empty, ymin=0, ymax=1.62, xlabel={valor de la variable analizada}, xlabel style={font=\scriptsize}, title style={font=\small\bfseries, yshift=-4pt}, every axis plot/.append style={line width=0.4pt}}}
+\begin{axis}[esq, name=p1, title={Uniforme}]
+ \addplot[fill=red!45, draw=red!60!black] {1.2*exp(-x^2/2)} \closedcycle;
+ \addplot[fill=gray!35, draw=black] {exp(-x^2/2)} \closedcycle;
+\end{axis}
+\begin{axis}[esq, name=p2, at={($(p1.east)+(0.9cm,0)$)}, anchor=west, title={Concentrado en un grupo natural}]
+ \addplot[fill=red!45, draw=red!60!black] {exp(-x^2/2) + 0.55*exp(-(x+0.7)^2/(2*0.75^2))} \closedcycle;
+ \addplot[fill=gray!35, draw=black] {exp(-x^2/2)} \closedcycle;
+ \addplot[dashed, black] {0.6*exp(-(x+0.7)^2/(2*0.75^2))};
+\end{axis}
+\begin{axis}[esq, name=p3, at={($(p1.south)+(0,-1.5cm)$)}, anchor=north, title={Según el resultado: una cola}]
+ \addplot[fill=red!45, draw=red!60!black] {exp(-x^2/2)*(1 + (x<-1.28))} \closedcycle;
+ \addplot[fill=gray!35, draw=black] {exp(-x^2/2)} \closedcycle;
+\end{axis}
+\begin{axis}[esq, name=p4, at={($(p3.east)+(0.9cm,0)$)}, anchor=west, title={Según el resultado: dos colas}]
+ \addplot[fill=red!45, draw=red!60!black] {exp(-x^2/2)*(1 + 0.6*(abs(x)>1.28))} \closedcycle;
+ \addplot[fill=gray!35, draw=black] {exp(-x^2/2)} \closedcycle;
+\end{axis}
+\end{tikzpicture}
+\caption{Esquemas de inyección. En gris, la distribución original de la variable analizada; en rojo, los registros duplicados que se agregan. En el esquema de grupo natural la línea punteada representa la distribución de ese grupo, que no tiene por qué coincidir con la del total.}
+\label{fig:esquemas}
+\end{figure*}
+
+\begin{table*}[!tp]
+\centering
+\caption{Esquemas de inyección en cada estudio}
+\label{tab:esquemas}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Esquema} & \textbf{Many Labs~1} & \textbf{Saber~11/Saber~Pro} \\
+\midrule
+Uniforme & Cualquier participante puede duplicarse & Cualquier estudiante puede duplicarse \\
+Concentrado en un grupo natural & Solo participantes del sitio de recolección más grande (1\,329), como si un laboratorio hubiera subido su lote dos veces & Solo estudiantes de estrato 1 (1\,709) \\
+Concentrado según el resultado & En las pruebas chi-cuadrado, una sola combinación de grupo y respuesta; en las pruebas $t$, las respuestas extremas de uno de los grupos & Estudiantes del decil más bajo del puntaje global (cola baja) o de los deciles más bajo y más alto (dos colas) \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\section{Resultados que se evaluarán}
+
+\begin{table*}[!tp]
+\centering
+\caption{Resultados y métricas de comparación}
+\label{tab:resultados}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Nivel de análisis} & \textbf{Resultados} & \textbf{Métrica de comparación} \\
+\midrule
+Descriptivo (Saber~11/Saber~Pro, consultas SQL) & Total de estudiantes; media, mediana, desviación estándar, mínimo y máximo de los puntajes; porcentaje de estudiantes de colegio público y en el decil más bajo; indicadores por programa; ranking de programas y correlación entre puntajes & Error relativo porcentual, diferencia en puntos porcentuales y tau de Kendall para el ranking \\
+\addlinespace
+Inferencial (Many Labs~1) & Pruebas chi-cuadrado de tres efectos y pruebas $t$ de dos efectos & Razón del estadístico frente a la línea base, valor $p$, V de Cramér y $d$ de Cohen \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+La comparación entre el estadístico de prueba y el tamaño de efecto es central en el nivel inferencial: el primero depende del número de filas y el segundo no, así que mirarlos juntos permite separar un cambio en la ``certeza'' aparente de un cambio en la fuerza real del efecto. Como los efectos de la línea base tienen valores $p$ prácticamente nulos, el interés no está en si cruzan el umbral de 0,05, sino en cuánto cambian la magnitud del estadístico y el tamaño de efecto.
+
+\section{Lo que no incluye el proyecto}
+
+\begin{itemize}
+ \item Duplicados aproximados o difusos, ni la comparación de algoritmos de detección de duplicados.
+ \item Otros problemas de calidad de datos, como valores faltantes, valores incorrectos, inconsistencias, errores de formato o datos desactualizados.
+ \item Modelos predictivos o de aprendizaje automático. Ninguno de los dos estudios ancla los usa, y la literatura ya ha medido el efecto de los duplicados sobre ese tipo de modelos.
+ \item Los trece efectos de Many Labs~1 ni su análisis de heterogeneidad entre sitios; se replican solo los cinco efectos que se reproducen con exactitud.
+ \item Conclusiones sustantivas sobre psicología o sobre el desempeño académico de los estudiantes. El tema de los datos es solo el medio para medir el efecto de los duplicados.
+ \item La generalización de los resultados a cualquier base de datos. Las conclusiones se refieren a estos conjuntos de datos, a estos indicadores y a estas pruebas.
+\end{itemize}
+
+Delimitado así, el proyecto se concentra en un solo problema de calidad y en un conjunto definido de resultados, lo que permite obtener hallazgos medibles, comparables y explicables en el tiempo del semestre.
+%==================== Fin de PRB6Alcance.tex ====================
+%==================== Inicio de PRB8Limitaciones.tex ====================
+\chapter{Limitaciones}
+
+Desde el inicio identificamos varias limitaciones. Las dejamos por escrito junto con la forma en que pensamos manejarlas, para que los resultados se interpreten en su justa medida.
+
+\textbf{Los estudios ancla son pequeños y de dominios específicos.} Many Labs~1 tiene 6\,344 participantes y sus efectos vienen de la psicología social; Saber~11/Saber~Pro tiene 12\,411 estudiantes de ingeniería. Son conjuntos revisados por pares, públicos y reproducibles, pero no representan las bases de datos de millones de registros que maneja una organización grande. Lo que encontremos describe el comportamiento de estos datos, estos indicadores y estas pruebas, y no debe extenderse a cualquier base de datos sin nuevas pruebas. Como el efecto de los duplicados depende de su proporción y no del tamaño absoluto de la base, esperamos que los patrones se mantengan, pero eso es algo que este proyecto no comprueba.
+
+\textbf{Los datos de Many Labs~1 exigen una preparación cuidadosa.} El archivo tiene 382 columnas, varias respuestas vacías vienen como espacios en blanco y no como valores nulos, y el análisis original se publicó en SPSS. Por eso trataremos los espacios en blanco como faltantes, reimplementaremos el análisis en Python y solo trabajaremos con los cinco efectos cuyos resultados publicados reproducimos con exactitud.
+
+\textbf{Saber~11/Saber~Pro solo tiene resultados descriptivos.} El artículo de datos reporta promedios, desviaciones y porcentajes, pero ninguna prueba estadística. Por eso cada caso cubre un nivel de análisis distinto: Saber el descriptivo y Many Labs el inferencial. El archivo, además, viene en Excel y trae una columna vacía que se descarta al cargarlo.
+
+\textbf{Solo se estudian duplicados exactos.} Quedan por fuera los registros parecidos pero no idénticos y los demás problemas de calidad: datos faltantes, valores incorrectos, inconsistencias entre campos y errores de formato.
+
+\textbf{Los duplicados son sintéticos.} Los introducimos nosotros, en porcentajes de 1\,\%, 5\,\%, 10\,\% y 20\,\% y con tres tipos de esquema (uniforme, concentrado en un grupo natural y concentrado según el resultado). Esto permite controlar exactamente cuánto y dónde se duplica, pero no cubre todos los patrones de duplicación que pueden aparecer en un sistema real. Los esquemas concentrados buscan acercarse a fallas típicas, como una carga que se ejecuta dos veces para una sola fuente. En algunos esquemas el grupo es más pequeño que el número de filas que hay que agregar con 20\,\%, así que esos casos se reportarán aparte.
+
+\textbf{Los valores $p$ de la línea base son prácticamente nulos.} Los cinco efectos de Many Labs~1 que replicamos son muy significativos, así que es poco probable que los duplicados los hagan cruzar el umbral de 0,05 en cualquiera de las dos direcciones. Por eso no mediremos si cambia la decisión de la prueba, sino cuánto cambian la magnitud del estadístico y el tamaño de efecto, que es lo que determina qué tan fuerte parece un hallazgo.
+
+\textbf{El tiempo es corto.} Quedan seis semanas, y el cambio de ancla en la semana 11 consumió parte del margen que teníamos. Lo compensa que los dos conjuntos de datos nuevos son pequeños y que ya verificamos sus líneas base, así que la carga y la réplica son más rápidas que con el ancla anterior. Si el tiempo no alcanza, priorizaremos el efecto de encuadre de Many Labs~1 y los indicadores de Saber que ya probamos en la exploración preliminar.
+
+\textbf{Reproducibilidad y dependencia de las herramientas.} La eliminación de duplicados exactos con \texttt{SELECT DISTINCT} funciona igual en cualquier gestor relacional, así que los resultados no dependen de PostgreSQL. Lo que sí depende de la herramienta es la generación de números aleatorios para escoger qué registros se duplican, que en PostgreSQL se controla con \texttt{setseed}. Para garantizar que el experimento se pueda repetir, registraremos todas las semillas y guardaremos las versiones generadas.
+%==================== Fin de PRB8Limitaciones.tex ====================
+
+%Parte III: planeación
+ \part{Planeación}
+%==================== Inicio de PRB9Plan.tex ====================
+\chapter{Plan de trabajo}
+
+El plan de trabajo se presenta en tres partes: las actividades, organizadas en etapas; las herramientas que se usan en cada una, y las fuentes de financiación del proyecto. Su distribución en el tiempo se detalla en el capítulo~\ref{cap:cronograma}.
+
+\section{Actividades}
+
+El trabajo está organizado en ocho etapas que van desde la definición del problema hasta la presentación final (Figura~\ref{fig:etapas}). Las dos primeras ya se completaron. La prueba de concepto cumple un doble papel: ensaya a escala el ciclo completo con Saber~11/Saber~Pro y, como ese conjunto de datos se usa entero, sus resultados son directamente los del caso descriptivo. Los scripts que se validen ahí se reutilizan después con Many Labs~1.
+
+\begin{figure*}[!tp]
+\centering
+\begin{tikzpicture}[
+  et/.style={draw, rounded corners=3pt, align=center, text width=3.05cm, minimum height=2.0cm, font=\scriptsize, inner sep=3pt, execute at begin node={\hyphenpenalty=10000\relax}},
+  hecho/.style={et, fill=gray!25},
+  >={Stealth[length=2.3mm]}]
+\node[hecho] (e1) at (0,0) {\textbf{1. Problema y revisión}\\ sem. 1--6\\[2pt] \emph{estado del arte}};
+\node[hecho] (e2) at (3.75,0) {\textbf{2. Ancla y anteproyecto}\\ sem. 7--11\\[2pt] \emph{Many Labs~1 y Saber verificados}};
+\node[et] (e3) at (7.5,0) {\textbf{3. Prueba de concepto}\\ sem. 12--13\\[2pt] \emph{scripts validados con Saber}};
+\node[et] (e4) at (11.25,0) {\textbf{4. Preparación de Many Labs~1}\\ sem. 14\\[2pt] \emph{línea base replicada}};
+\node[et] (e5) at (11.25,-2.7) {\textbf{5. Análisis inferencial}\\ sem. 14\\[2pt] \emph{$\chi^2$, $t$ y valores $p$}};
+\node[et] (e6) at (7.5,-2.7) {\textbf{6. Tamaños de efecto y consolidación}\\ sem. 15\\[2pt] \emph{tabla consolidada}};
+\node[et] (e7) at (3.75,-2.7) {\textbf{7. Comparación}\\ sem. 16\\[2pt] \emph{tablas y gráficas}};
+\node[et] (e8) at (0,-2.7) {\textbf{8. Documento y presentación}\\ sem. 16--17\\[2pt] \emph{documento final}};
+\draw[->] (e1) -- (e2); \draw[->] (e2) -- (e3); \draw[->] (e3) -- (e4);
+\draw[->] (e4) -- (e5); \draw[->] (e5) -- (e6); \draw[->] (e6) -- (e7); \draw[->] (e7) -- (e8);
+\draw[->, dashed] (e3.south west) ++(0.3,0) -- node[left, font=\scriptsize, align=right] {resultados\\ descriptivos} ([xshift=0.3cm]e6.north west);
+\end{tikzpicture}
+\caption{Etapas del plan de trabajo, con sus semanas y el producto principal de cada una. Las etapas sombreadas ya se completaron; la línea punteada indica que los resultados de la prueba de concepto pasan directamente a la consolidación.}
+\label{fig:etapas}
+\end{figure*}
+
+\subsection{Etapa 1. Definición del problema y revisión documental (semanas 1 a 6, realizada)}
+
+Se definió el problema, la pregunta y los objetivos, y se hizo una revisión documental de veinte antecedentes en revistas colombianas y latinoamericanas indexadas, complementada con referentes internacionales. La revisión mostró que el efecto de los duplicados solo se ha medido sobre la exactitud de clasificadores y que falta evidencia sobre indicadores descriptivos, pruebas estadísticas y conclusiones de estudios reales.
+
+\textbf{Producto:} tema del proyecto, matriz de revisión documental, mapa mental y estado del arte, entregados entre el 25 de agosto y el 8 de septiembre.
+
+\subsection{Etapa 2. Selección de los estudios ancla y anteproyecto (semanas 7 a 11, realizada)}
+
+En las semanas 7 y 8 se evaluaron cinco candidatos con seis criterios: datos públicos, metodología documentada, análisis replicable en el tiempo disponible, reputación de la fuente, tamaño manejable y un significado claro de ``duplicado exacto''. Se escogió inicialmente el estudio de Patel (2025), y con él se presentaron la prueba de concepto y el anteproyecto. En la semana 10 reevaluamos esa decisión, porque se trataba de un preprint sin revisión por pares y su código no coincidía del todo con el artículo. Hicimos una nueva búsqueda centrada en estudios revisados por pares, descargamos los datos de los candidatos más fuertes y replicamos sus resultados por nuestra cuenta. Many Labs~1 (Klein et al., 2014) y Saber~11/Saber~Pro (Delahoz-Dominguez et al., 2020) fueron los que mejor cumplieron los criterios, y sus resultados publicados los reprodujimos con exactitud, así que en la semana 11 los adoptamos como anclas y actualizamos las entregas.
+
+\textbf{Producto:} estudios ancla definidos y verificados, propuesta de la prueba de concepto y anteproyecto, actualizados en el formato \LaTeX{} del curso.
+
+\subsection{Etapa 3. Ejecución de la prueba de concepto (semanas 12 y 13)}
+
+Sobre los 12\,411 registros de Saber~11/Saber~Pro se ejecuta el ciclo completo: línea base, inyección de duplicados en cuatro niveles y cuatro esquemas con 10 semillas por combinación, ocho indicadores calculados con consultas SQL idénticas, deduplicación y comparación.
+
+\textbf{Producto:} informe de la prueba de concepto, resultados del caso descriptivo y scripts validados.
+
+\subsection{Etapa 4. Preparación de los datos de Many Labs~1 (semana 14)}
+
+Se lee el archivo depurado de Many Labs~1, se tratan los espacios en blanco como valores faltantes, se carga en PostgreSQL y se verifica que no haya duplicados exactos. Luego se reimplementan en Python las pruebas de los cinco efectos seleccionados y se comprueba que reproducen los valores publicados. Con los mismos scripts de la prueba de concepto se generan las versiones con 1\,\%, 5\,\%, 10\,\% y 20\,\% de duplicados en los esquemas uniforme, concentrado en el sitio de recolección más grande y concentrado según el resultado.
+
+\textbf{Producto:} línea base replicada y versiones con duplicados verificadas.
+
+\subsection{Etapa 5. Análisis inferencial (semana 14)}
+
+Sobre cada versión y sobre su versión deduplicada se ejecutan las tres pruebas chi-cuadrado y las dos pruebas $t$, y se registran el estadístico, los grados de libertad y el valor $p$.
+
+\textbf{Producto:} tabla de resultados inferenciales de todas las versiones.
+
+\subsection{Etapa 6. Tamaños de efecto y consolidación (semana 15)}
+
+Se calculan la V de Cramér para las pruebas chi-cuadrado y la $d$ de Cohen para las pruebas $t$ en todas las versiones, y se reúnen en una sola tabla los resultados de los dos casos: los descriptivos de Saber y los inferenciales de Many Labs.
+
+\textbf{Producto:} tabla consolidada de resultados.
+
+\subsection{Etapa 7. Comparación y análisis de resultados (semana 16)}
+
+Se calculan el error relativo, las diferencias en puntos porcentuales, la tau de Kendall para los rankings, la razón de cada estadístico frente a la línea base y el cambio en los tamaños de efecto. Se grafica cada resultado frente al nivel de duplicación, separando los esquemas, para ver qué resultados son más sensibles y a partir de qué nivel la distorsión se vuelve relevante. Los hallazgos se contrastan con las hipótesis y con la literatura revisada.
+
+\textbf{Producto:} análisis de resultados con tablas y gráficas.
+
+\subsection{Etapa 8. Documento final y presentación (semanas 16 y 17)}
+
+Se redacta el documento final en el formato de tesis del curso, con la metodología, los resultados, las conclusiones, las limitaciones encontradas y el trabajo futuro, y se prepara la presentación del proyecto para la semana del 23 al 27 de noviembre.
+
+\textbf{Producto:} documento final y presentación del proyecto.
+
+\section{Herramientas}
+
+Todo el software del proyecto es libre o tiene un plan gratuito suficiente para el trabajo, y los dos conjuntos de datos tienen licencias abiertas. La Tabla~\ref{tab:herramientas_plan} resume las herramientas y las etapas en que se usan.
+
+\begin{table*}[!tp]
+\centering
+\caption{Herramientas del proyecto}
+\label{tab:herramientas_plan}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.3cm} X >{\raggedright\arraybackslash}p{2.1cm} >{\raggedright\arraybackslash}p{2.2cm}}
+\toprule
+\textbf{Herramienta} & \textbf{Uso} & \textbf{Etapas} & \textbf{Costo} \\
+\midrule
+PostgreSQL 16 & Almacenamiento de las versiones, inyección de duplicados, consultas analíticas y deduplicación & 3 a 5 & Libre \\
+Python 3.12 (pandas, openpyxl, psycopg~3, SQLAlchemy) & Lectura de los archivos, carga a la base, orquestación del experimento y consolidación de resultados & 3 a 6 & Libre \\
+SciPy y NumPy & Pruebas chi-cuadrado y $t$, tamaños de efecto y tau de Kendall & 3 a 7 & Libre \\
+matplotlib & Gráficas de los resultados frente al nivel de duplicación & 3 y 7 & Libre \\
+JupyterLab & Cuadernos de análisis reproducibles & 3 a 7 & Libre \\
+Git y GitHub (repositorio privado) & Control de versiones de scripts, semillas y resultados & 3 a 8 & Plan gratuito \\
+Overleaf & Redacción de los documentos en \LaTeX{} con la plantilla del curso & 1, 2 y 8 & Plan gratuito \\
+Equipos portátiles de los integrantes & Ejecución de todo el trabajo & 1 a 8 & Propios \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\section{Fuentes de financiación}
+
+El presupuesto recoge lo que cuesta desarrollar el proyecto durante las 17 semanas del semestre. Como todo el software y los dos conjuntos de datos son libres y gratuitos (PostgreSQL, Python, Overleaf, GitHub, Many Labs~1 y Saber~11/Saber~Pro), el costo está casi por completo en el tiempo de las personas: el de los tres integrantes y el del profesor que orienta el proyecto. A eso se suman el uso de los equipos de cómputo, la parte del internet y la energía que consume el trabajo y la papelería. La Tabla~\ref{tab:presupuesto} detalla cada rubro y quién lo aporta.
+
+\begin{table*}[!tp]
+\centering
+\caption{Presupuesto del proyecto (pesos colombianos de 2026)}
+\label{tab:presupuesto}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{2.3cm} r r r r}
+\toprule
+\textbf{Rubro} & \textbf{Cantidad} & \textbf{Valor unitario} & \textbf{Estudiantes} & \textbf{Universidad} & \textbf{Total} \\
+\midrule
+\multicolumn{6}{l}{\textit{Talento humano}} \\
+Integrantes del grupo (3), 6 horas por semana cada uno$^{a}$ & 306 horas & 15\,100 & 4\,620\,600 & -- & 4\,620\,600 \\
+Profesor orientador, 2 horas por semana$^{b}$ & 34 horas & 55\,200 & -- & 1\,876\,800 & 1\,876\,800 \\
+\addlinespace
+\multicolumn{6}{l}{\textit{Equipos y servicios}} \\
+Equipos de cómputo portátiles, depreciación durante el semestre$^{c}$ & 3 equipos $\times$ 4 meses & 50\,000 & 600\,000 & -- & 600\,000 \\
+Internet residencial, horas de uso del proyecto$^{d}$ & 306 horas & 111 & 34\,000 & -- & 34\,000 \\
+Energía eléctrica de los equipos$^{e}$ & 19,9 kWh & 825 & 16\,400 & -- & 16\,400 \\
+\addlinespace
+\multicolumn{6}{l}{\textit{Materiales}} \\
+Papelería: impresiones del documento final y de las entregas$^{f}$ & 150 hojas & 300 & 45\,000 & -- & 45\,000 \\
+Papelería: útiles (cuadernos, esferos y marcadores)$^{f}$ & 1 global & 60\,000 & 60\,000 & -- & 60\,000 \\
+\midrule
+\textbf{Total} & & & \textbf{5\,376\,000} & \textbf{1\,876\,800} & \textbf{7\,252\,800} \\
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+\begin{minipage}{\textwidth}
+\footnotesize
+$^{a}$ 6 horas por semana durante 17 semanas son 102 horas por integrante. La hora se valora como la de un ingeniero de sistemas recién egresado: un salario de referencia de \$2\,750\,000 mensuales, punto medio del rango de 2,5 a 3 millones que reportan los portales de empleo (Corporación Unificada Nacional de Educación Superior, 2026), dividido entre 182 horas al mes, que corresponden a la jornada de 42 horas semanales vigente desde julio de 2026 (Ley 2101 de 2021; Congreso de la República de Colombia, 2021).\\
+$^{b}$ 2 horas por semana durante 17 semanas, entre asesorías y revisión de entregas. La hora se estima con el salario de un docente de planta de tiempo completo de una universidad pública: 400 puntos salariales a \$23\,924 por punto (Decreto 0318 de 2026; Presidencia de la República de Colombia, 2026), dividido entre 173 horas al mes (40 horas semanales). El puntaje es un supuesto de referencia.\\
+$^{c}$ Valor de referencia de \$3\,000\,000 por un portátil de gama media, depreciado en línea recta a 5 años (\$50\,000 al mes), durante los cerca de 4 meses del semestre.\\
+$^{d}$ Plan de fibra de \$80\,000 mensuales, precio promedio en ciudades principales (Cuánto me Cuesta, 2026b), prorrateado por hora de servicio (\$111 por hora) y multiplicado por las 306 horas de trabajo del grupo.\\
+$^{e}$ Consumo promedio estimado de 65 W por portátil durante las 306 horas de trabajo, con una tarifa de referencia de \$825 por kWh en Bogotá (Cuánto me Cuesta, 2026a).\\
+$^{f}$ Valores estimados de mercado.
+\end{minipage}
+\end{table*}
+
+Del total de \$7\,252\,800, los integrantes del grupo aportan \$5\,376\,000 (74\,\%), casi todo en forma de tiempo de trabajo, y la Universidad Distrital aporta \$1\,876\,800 (26\,\%) a través del tiempo del profesor. El proyecto no requiere compras de software, licencias ni datos, ni equipos adicionales a los que ya tienen los integrantes, así que ningún rubro implica un desembolso nuevo de dinero aparte de la papelería.
+%==================== Fin de PRB9Plan.tex ====================
+%==================== Inicio de PRB7Cronograma.tex ====================
+\chapter{Cronograma}\label{cap:cronograma}
+
+El proyecto se desarrolla a lo largo de las 17 semanas del semestre, del 3 de agosto al 27 de noviembre de 2026. Las primeras once ya se cumplieron: en ellas se definió el tema, se hizo la revisión documental, se presentaron las entregas del curso en las fechas de cierre que aparecen en la Tabla~\ref{tab:cronograma}, se escogieron los estudios ancla y se completó este anteproyecto. En la semana 10 reevaluamos el ancla inicial y, después de verificar de forma independiente varios candidatos, en la semana 11 la cambiamos por Many Labs~1 (Klein et al., 2014), con el conjunto de datos Saber~11/Saber~Pro (Delahoz-Dominguez et al., 2020) como segundo caso. Las seis semanas restantes se dedican a ejecutar la prueba de concepto, al experimento completo, a la redacción del documento final y a la presentación del proyecto a finales de noviembre. Las fechas descuentan los festivos del 7 y el 17 de agosto, el 12 de octubre y el 2 y el 16 de noviembre. La Figura~\ref{fig:gantt} resume la distribución de las etapas en el tiempo.
+
+\begin{figure*}[!tp]
+\centering
+\begin{tikzpicture}[font=\scriptsize]
+\node at (0.280,0.45) {1};
+\node at (0.840,0.45) {2};
+\node at (1.400,0.45) {3};
+\node at (1.960,0.45) {4};
+\node at (2.520,0.45) {5};
+\node at (3.080,0.45) {6};
+\node at (3.640,0.45) {7};
+\node at (4.200,0.45) {8};
+\node at (4.760,0.45) {9};
+\node at (5.320,0.45) {10};
+\node at (5.880,0.45) {11};
+\node at (6.440,0.45) {12};
+\node at (7.000,0.45) {13};
+\node at (7.560,0.45) {14};
+\node at (8.120,0.45) {15};
+\node at (8.680,0.45) {16};
+\node at (9.240,0.45) {17};
+\draw[gray!30] (0.000,0.2) -- (0.000,-5.48);
+\draw[gray!30] (0.560,0.2) -- (0.560,-5.48);
+\draw[gray!30] (1.120,0.2) -- (1.120,-5.48);
+\draw[gray!30] (1.680,0.2) -- (1.680,-5.48);
+\draw[gray!30] (2.240,0.2) -- (2.240,-5.48);
+\draw[gray!30] (2.800,0.2) -- (2.800,-5.48);
+\draw[gray!30] (3.360,0.2) -- (3.360,-5.48);
+\draw[gray!30] (3.920,0.2) -- (3.920,-5.48);
+\draw[gray!30] (4.480,0.2) -- (4.480,-5.48);
+\draw[gray!30] (5.040,0.2) -- (5.040,-5.48);
+\draw[gray!30] (5.600,0.2) -- (5.600,-5.48);
+\draw[gray!30] (6.160,0.2) -- (6.160,-5.48);
+\draw[gray!30] (6.720,0.2) -- (6.720,-5.48);
+\draw[gray!30] (7.280,0.2) -- (7.280,-5.48);
+\draw[gray!30] (7.840,0.2) -- (7.840,-5.48);
+\draw[gray!30] (8.400,0.2) -- (8.400,-5.48);
+\draw[gray!30] (8.960,0.2) -- (8.960,-5.48);
+\draw[gray!30] (9.520,0.2) -- (9.520,-5.48);
+\node[anchor=east, font=\scriptsize\bfseries] at (-0.15,0.45) {Semana};
+\node[anchor=east, align=right] at (-0.15,-0.310) {1. Problema y revisión documental};
+\draw[fill=gray!65] (0.030,-0.510) rectangle (3.330,-0.110);
+\node[anchor=east, align=right] at (-0.15,-0.930) {2. Selección del ancla y anteproyecto};
+\draw[fill=gray!65] (3.390,-1.130) rectangle (5.570,-0.730);
+\draw[fill=gray!65] (5.630,-1.130) rectangle (6.130,-0.730);
+\node[anchor=east, align=right] at (-0.15,-1.550) {3. Prueba de concepto (Saber)};
+\draw[pattern=north east lines, pattern color=gray!80] (6.190,-1.750) rectangle (6.690,-1.350);
+\draw[fill=white] (6.750,-1.750) rectangle (7.250,-1.350);
+\node[anchor=east, align=right] at (-0.15,-2.170) {4. Preparación de Many Labs~1};
+\draw[fill=white] (7.310,-2.370) rectangle (7.810,-1.970);
+\node[anchor=east, align=right] at (-0.15,-2.790) {5. Análisis inferencial};
+\draw[fill=white] (7.310,-2.990) rectangle (7.810,-2.590);
+\node[anchor=east, align=right] at (-0.15,-3.410) {6. Tamaños de efecto y consolidación};
+\draw[fill=white] (7.870,-3.610) rectangle (8.370,-3.210);
+\node[anchor=east, align=right] at (-0.15,-4.030) {7. Comparación y análisis};
+\draw[fill=white] (8.430,-4.230) rectangle (8.930,-3.830);
+\node[anchor=east, align=right] at (-0.15,-4.650) {8. Documento final y presentación};
+\draw[fill=white] (8.430,-4.850) rectangle (9.490,-4.450);
+\node[anchor=east, font=\scriptsize\bfseries] at (-0.15,-5.270) {Entregas del curso};
+\node[diamond, draw, fill=black, inner sep=1.6pt] at (1.960,-5.270) {};
+\node[diamond, draw, fill=black, inner sep=1.6pt] at (2.520,-5.270) {};
+\node[diamond, draw, fill=black, inner sep=1.6pt] at (3.080,-5.270) {};
+\node[diamond, draw, fill=black, inner sep=1.6pt] at (4.200,-5.270) {};
+\node[diamond, draw, fill=black, inner sep=1.6pt] at (4.760,-5.270) {};
+\node[diamond, draw, fill=black, inner sep=1.6pt] at (9.240,-5.270) {};
+\draw[red!70!black, thick, dashed] (6.160,0.2) -- (6.160,-5.48) node[below, text=red!70!black] {19 de octubre};
+\draw[fill=gray!65] (0,-6.33) rectangle ++(0.45,0.28); \node[anchor=west] at (0.5,-6.19) {realizado};
+\draw[pattern=north east lines, pattern color=gray!80] (2.2,-6.33) rectangle ++(0.45,0.28); \node[anchor=west] at (2.7,-6.19) {en curso};
+\draw (4.3,-6.33) rectangle ++(0.45,0.28); \node[anchor=west] at (4.8,-6.19) {pendiente};
+\node[diamond, draw, fill=black, inner sep=1.6pt] at (6.6,-6.19) {}; \node[anchor=west] at (6.75,-6.19) {entrega};
+\end{tikzpicture}
+\caption{Diagrama de Gantt del proyecto por etapas, con las entregas del curso. La línea punteada marca el inicio de la semana 12, cuando se entrega el anteproyecto completo.}
+\label{fig:gantt}
+\end{figure*}
+
+\begin{table*}[!tp]
+\centering
+\caption{Cronograma del proyecto}\label{tab:cronograma}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{c >{\raggedright\arraybackslash}p{2.1cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{4.6cm} >{\raggedright\arraybackslash}p{1.5cm}}
+\toprule
+\textbf{Sem.} & \textbf{Fechas} & \textbf{Actividad principal} & \textbf{Resultado o entrega} & \textbf{Estado} \\
+\midrule
+1--3 & 3 -- 21 ago & Definición del tema, problema y pregunta de investigación; búsqueda de antecedentes en revistas indexadas & Propuesta de tema y primeros antecedentes & Realizado \\
+4 & 24 -- 28 ago & Matriz de revisión documental y consolidación del tema & Entregas: revisión documental (25 ago) y tema del proyecto (28 ago) & Realizado \\
+5 & 31 ago -- 4 sep & Organización de los antecedentes por ejes temáticos & Entrega: mapa mental (3 sep) & Realizado \\
+6 & 7 -- 11 sep & Redacción del estado del arte & Entrega: estado del arte (8 sep) & Realizado \\
+7 & 14 -- 18 sep & Búsqueda y evaluación de candidatos a estudio ancla; diseño de la prueba de concepto & Candidatos evaluados con seis criterios & Realizado \\
+8 & 21 -- 25 sep & Auditoría del código del estudio ancla y decisión inicial & Entrega: prueba de concepto (21 sep); ancla inicial: Patel (2025) & Realizado \\
+9 & 28 sep -- 2 oct & Redacción del anteproyecto & Entregas: anteproyecto partes 1 y 2 (30 sep) y parte 3 (1 oct) & Realizado \\
+10 & 5 -- 9 oct & Reevaluación del ancla: búsqueda de candidatos revisados por pares, descarga de sus datos y réplica independiente de sus resultados & Informe de candidatos; Many Labs~1 y Saber~11/Saber~Pro verificados & Realizado \\
+11 & 13 -- 16 oct & Cambio del ancla a Many Labs~1, con Saber~11/Saber~Pro como segundo caso; actualización de las entregas en el formato \LaTeX{} del curso & Estado del arte, prueba de concepto y anteproyecto actualizados & Realizado \\
+12 & 19 -- 23 oct & Prueba de concepto: carga de Saber~11/Saber~Pro en PostgreSQL, línea base, scripts de inyección y generación de las 160 versiones & Línea base verificada y versiones con duplicados & En curso \\
+13 & 26 -- 30 oct & Prueba de concepto: consultas sobre todas las versiones, deduplicación, métricas, gráficas e informe & Informe de la prueba de concepto y ajustes al diseño & Pendiente \\
+14 & 3 -- 6 nov & Many Labs~1: preparación de los datos, réplica de los cinco efectos en Python, generación de versiones y pruebas chi-cuadrado y $t$ & Línea base replicada y estadísticos de todas las versiones & Pendiente \\
+15 & 9 -- 13 nov & Many Labs~1: tamaños de efecto (V de Cramér y $d$ de Cohen); consolidación de los resultados de los dos casos & Tabla consolidada de resultados descriptivos e inferenciales & Pendiente \\
+16 & 17 -- 20 nov & Comparación, análisis de resultados y redacción del documento final en el formato de tesis del curso & Documento final en borrador & Pendiente \\
+17 & 23 -- 27 nov & Revisión final, preparación de la presentación y presentación del proyecto & Documento final y presentación & Pendiente \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+%==================== Fin de PRB7Cronograma.tex ====================
+
+%Numeración final
+ \backmatter
+
+\begin{thebibliography}{xx}
+%==================== Inicio de Bibliografia.tex ====================
+%Bibliografía en formato APA 7
+
+\bibitem{amezquita2022} Amézquita Tovar, J. C., y Eslava Blanco, H. J. (2022). Supervised learning for data cleaning in the coherence and completeness dimensions. \emph{Ingeniería y Competitividad, 24}(2). \url{https://doi.org/10.25100/iyc.v24i02.11361}
+
+\bibitem{batini2009} Batini, C., Cappiello, C., Francalanci, C., y Maurino, A. (2009). Methodologies for data quality assessment and improvement. \emph{ACM Computing Surveys, 41}(3), 1--52. \url{https://doi.org/10.1145/1541880.1541883}
+
+\bibitem{candal2013} Candal Vicente, I. (2013). Modelo de éxito de un data warehouse. \emph{Tecnura, 17}(35), 116--125. \url{https://doi.org/10.14483/udistrital.jour.tecnura.2013.1.a10}
+
+\bibitem{christen2012} Christen, P. (2012). \emph{Data matching: Concepts and techniques for record linkage, entity resolution, and duplicate detection}. Springer. \url{https://doi.org/10.1007/978-3-642-31164-2}
+
+\bibitem{cohen1988} Cohen, J. (1988). \emph{Statistical power analysis for the behavioral sciences} (2.ª ed.). Lawrence Erlbaum Associates.
+
+\bibitem{congreso2021} Congreso de la República de Colombia. (2021). \emph{Ley 2101 de 2021, por medio de la cual se reduce la jornada laboral semanal de manera gradual, sin disminuir el salario de los trabajadores y se dictan otras disposiciones}.
+
+\bibitem{contrerasbravo2022} Contreras Bravo, L. E., Nieves-Pimiento, N., y Gonzalez-Guerrero, K. (2022). Prediction of university-level academic performance through machine learning mechanisms and supervised methods. \emph{Ingeniería, 28}(1), e19514. \url{https://doi.org/10.14483/23448393.19514}
+
+\bibitem{contrerascontreras2022} Contreras Contreras, G. F., Medina Delgado, B., Acevedo Jaimes, B. R., y Guevara Ibarra, D. (2022). Metodología de desarrollo de técnicas de agrupamiento de datos usando aprendizaje automático. \emph{Tecnura, 26}(72), 42--58. \url{https://doi.org/10.14483/22487638.17246}
+
+\bibitem{corporacioncun2026} Corporación Unificada Nacional de Educación Superior. (2026, 2 de julio). \emph{¿Cuál es el salario promedio de un ingeniero de sistemas?} \url{https://cun.edu.co/blog/cuanto-gana-un-ingeniero-de-sistemas-en-colombia/}
+
+\bibitem{corrales2016} Corrales, D. C., Ledezma, A. I., y Corrales, J. C. (2016). A systematic review of data quality issues in knowledge discovery tasks. \emph{Revista Ingenierías Universidad de Medellín, 15}(28), 125--149. \url{https://doi.org/10.22395/rium.v15n28a7}
+
+\bibitem{cuantomecuesta2026a} Cuánto me Cuesta. (2026a). \emph{Precio de la electricidad en Colombia} [Precios actualizados a abril de 2026]. \url{https://cuantomecuesta.com/co/electricidad/}
+
+\bibitem{cuantomecuesta2026b} Cuánto me Cuesta. (2026b). \emph{Precio del internet de fibra óptica en Colombia} [Precios actualizados a abril de 2026]. \url{https://cuantomecuesta.com/co/internet-fibra/}
+
+\bibitem{dasilva2023} Da Silva Pereira Rodrigues, A. R. (2023). Potencial antioxidante, antimicrobiano, anti-inflamatória e antifúngica da \emph{Anacardium occidentale} (Linn): revisão de literatura. \emph{Revista Colombiana de Ciencias Químico-Farmacéuticas, 52}(1). \url{https://doi.org/10.15446/rcciquifa.v52n1.105316}
+
+\bibitem{delahoz2020} Delahoz-Dominguez, E., Zuluaga, R., y Fontalvo-Herrera, T. (2020). Dataset of academic performance evolution for engineering students. \emph{Data in Brief, 30}, 105537. \url{https://doi.org/10.1016/j.dib.2020.105537}
+
+\bibitem{elmagarmid2007} Elmagarmid, A. K., Ipeirotis, P. G., y Verykios, V. S. (2007). Duplicate record detection: A survey. \emph{IEEE Transactions on Knowledge and Data Engineering, 19}(1), 1--16. \url{https://doi.org/10.1109/TKDE.2007.250581}
+
+\bibitem{fuentes2014} Fuentes-Moya, C. L., Caro-Gutiérrez, M. A., y Rodríguez-Ríos, A. E. (2014). Influencia de la calidad de datos en la preferencia de los ciudadanos en aplicaciones de e-Government municipal. \emph{Revista Facultad de Ingeniería Universidad de Antioquia}, (73).
+
+\bibitem{gil2014} Gil González, W. J., Mora Flórez, J. J., y Pérez Londoño, S. M. (2014). Análisis del procesamiento de los datos de entrada para un localizador de fallas en sistemas de distribución. \emph{Tecnura, 18}(41), 64--75. \url{https://doi.org/10.14483/udistrital.jour.tecnura.2014.3.a05}
+
+\bibitem{gomez2025} Gómez, J. A., Benavides, I. F., y Selvaraj, J. J. (2025). Evaluation of the Known Sub-Sequence Algorithm (KSSA) for optimal use in time series of tuna fishing in the Pacific Ocean. \emph{Ingeniería e Investigación, 45}(1), e115627. \url{https://doi.org/10.15446/ing.investig.115627}
+
+\bibitem{hernandezleal2017} Hernández-Leal, E. J., Duque-Méndez, N. D., y Moreno-Cadavid, J. (2017). Big Data: una exploración de investigaciones, tecnologías y casos de aplicación. \emph{TecnoLógicas, 20}(39). \url{https://revistas.itm.edu.co/index.php/tecnologicas/article/view/685}
+
+\bibitem{hernandezponce2024} Hernández-Ponce, A.-M., Ornelas-Rodríguez, F.-J., Hurtado-Ramos, J.-B., Ramírez-Pedraza, P.-A., y González-Barbosa, J.-J. (2024). A semi-supervised deep learning model for defective lime classification. \emph{Ingeniería e Investigación, 44}(3), e112835. \url{https://doi.org/10.15446/ing.investig.112835}
+
+\bibitem{kendall1938} Kendall, M. G. (1938). A new measure of rank correlation. \emph{Biometrika, 30}(1--2), 81--93.
+
+\bibitem{klein2014} Klein, R. A., Ratliff, K. A., Vianello, M., Adams, R. B., Jr., Bahník, Š., Bernstein, M. J., Bocian, K., Brandt, M. J., Brooks, B., Brumbaugh, C. C., Cemalcilar, Z., Chandler, J., Cheong, W., Davis, W. E., Devos, T., Eisner, M., Frankowska, N., Furrow, D., Galliani, E. M., \ldots{} Nosek, B. A. (2014). Investigating variation in replicability: A ``many labs'' replication project. \emph{Social Psychology, 45}(3), 142--152. \url{https://doi.org/10.1027/1864-9335/a000178}
+
+\bibitem{li2021} Li, P., Rao, X., Blase, J., Zhang, Y., Chu, X., y Zhang, C. (2021). CleanML: A study for evaluating the impact of data cleaning on ML classification tasks. En \emph{2021 IEEE 37th International Conference on Data Engineering (ICDE)} (pp. 13--24). IEEE.
+
+\bibitem{martinez2022} Martínez, R., Pons, C., Rodríguez, R., y Vera, P. (2022). Estudio de calidad de datos de gobierno abierto relacionados con COVID-19 en América Latina. \emph{Revista Facultad de Ingeniería Universidad de Antioquia}. \url{https://doi.org/10.17533/udea.redin.20220579}
+
+\bibitem{mohammed2025} Mohammed, S., Budach, L., Feuerpfeil, M., Ihde, N., Nathansen, A., Noack, N. S., Patzlaff, H., Naumann, F., y Harmouch, H. (2025). The effects of data quality on machine learning performance on tabular data. \emph{Information Systems, 132}, 102549. \url{https://doi.org/10.1016/j.is.2025.102549}
+
+\bibitem{openscience2015} Open Science Collaboration. (2015). Estimating the reproducibility of psychological science. \emph{Science, 349}(6251), aac4716. \url{https://doi.org/10.1126/science.aac4716}
+
+\bibitem{patel2025} Patel, U. (2025). \emph{Identifying determinants of cesarean births: A machine learning framework for maternal health research} [Preprint]. Research Square. \url{https://doi.org/10.21203/rs.3.rs-7320875/v1}
+
+\bibitem{pearson1900} Pearson, K. (1900). On the criterion that a given system of deviations from the probable in the case of a correlated system of variables is such that it can be reasonably supposed to have arisen from random sampling. \emph{The London, Edinburgh, and Dublin Philosophical Magazine and Journal of Science, 50}(302), 157--175.
+
+\bibitem{perez2020} Pérez-Gutiérrez, B. R. (2020). Comparación de técnicas de minería de datos para identificar indicios de deserción estudiantil, a partir del desempeño académico. \emph{Revista UIS Ingenierías, 19}. \url{https://revistas.uis.edu.co/index.php/revistauisingenierias/article/view/9834}
+
+\bibitem{piedrahita2022} Piedrahita Mazo, A., y Montoya Quintero, D. (2022). Evaluación de la calidad de la información en las organizaciones, a través de herramientas tecnológicas. \emph{Signos: Investigación en Sistemas de Gestión, 14}(2). \url{https://revistas.usantotomas.edu.co/index.php/signos/article/view/7785}
+
+\bibitem{presidencia2026} Presidencia de la República de Colombia. (2026). \emph{Decreto 0318 del 25 de marzo de 2026}. \url{https://dapre.presidencia.gov.co/normativa/normativa/DECRETO%20No.%200318%20DEL%2025%20DE%20MARZO%20DE%202026.pdf}
+
+\bibitem{quevedo2024} Quevedo Piratova, D. A., Londoño Villalba, J. U., y González Gómez, A. A. (2024). Aplicación de machine learning para predicciones de datos dependientes consecutivos de tipo $\{[(a, b)\rightarrow c]\rightarrow d\}$. \emph{Tecnura, 28}(79), 66--86. \url{https://doi.org/10.14483/22487638.22094}
+
+\bibitem{ramireznoriega2026} Ramírez-Noriega, A., Martínez-Ramírez, Y., Figueroa Pérez, J. F., Tripp-Barba, C., y Murillo-Corrales, M. A. (2026). Minería de datos y redes sociales: predicción de la distracción en estudiantes de educación superior. \emph{Tecnura, 30}(87), 54--71. \url{https://doi.org/10.14483/22487638.24842}
+
+\bibitem{ramos2024} Ramos Frometa, C., y Gómez Luna, L. M. (2024). Cultivo y aplicaciones de \emph{Porphyridium cruentum}: principales tendencias y proyecciones. \emph{Revista Colombiana de Biotecnología, 26}(1), 62--80. \url{https://doi.org/10.15446/rev.colomb.biote.v26n1.108815}
+
+\bibitem{rodriguez2013} Rodríguez Rodríguez, J. E. (2013). Desarrollo de herramientas para minería de datos ``UDMiner''. \emph{Revista Vínculos, 9}(1), 21--40. \url{https://doi.org/10.14483/2322939X.4207}
+
+\bibitem{romero2023} Romero Duque, G. A., González Prieto, C. A., Díaz Barriosnuevos, M. A., y Rueda Menjura, N. A. (2023). Revisión y perspectivas para la construcción de bases de datos robustas con datos faltantes: caso aplicado a información financiera. \emph{Tecnura, 27}(75), 12--37. \url{https://doi.org/10.14483/22487638.18268}
+
+\bibitem{sullivan2012} Sullivan, G. M., y Feinn, R. (2012). Using effect size---or why the P value is not enough. \emph{Journal of Graduate Medical Education, 4}(3), 279--282. \url{https://doi.org/10.4300/JGME-D-12-00156.1}
+
+\bibitem{wang1996} Wang, R. Y., y Strong, D. M. (1996). Beyond accuracy: What data quality means to data consumers. \emph{Journal of Management Information Systems, 12}(4), 5--33. \url{https://doi.org/10.1080/07421222.1996.11518099}
+
+\bibitem{wasserstein2016} Wasserstein, R. L., y Lazar, N. A. (2016). The ASA statement on p-values: Context, process, and purpose. \emph{The American Statistician, 70}(2), 129--133. \url{https://doi.org/10.1080/00031305.2016.1154108}
+
+\bibitem{yepes2023} Yepes-Delgado, C. E., Muñoz-González, S., y Zuleta-Tobón, J. J. (2023). Aseguramiento y control de la calidad de los datos en un estudio de cohorte en Colombia. \emph{Salud UIS, 55}, e23072. \url{https://doi.org/10.18273/saluduis.55.e:23072}
+%==================== Fin de Bibliografia.tex ====================
+\end{thebibliography}
+\end{document}
